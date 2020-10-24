@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 여기서 설정한 네임 스페이스는 dao에서 인식할 수 있게 dao에서 실행하는 sqlsession.메서드 매개변수에 넣어준다. -->
+<mapper namespace="mapper.member">
+		<!-- 
+		<resultMap id="memResult" type="memberVO">
+		<result property="id" column="id" />
+        <result property="pwd" column="pwd" />
+        <result property="name" column="name" />
+        <result property="email" column="email" />
+        <result property="joinDate" column="joinDate" />
+	</resultMap> 
+
+	<resultMap id="memResult" type="java.util.HashMap">
+      <result property="id" column="id" />
+      <result property="pwd" column="pwd" />
+      <result property="name" column="name" />
+      <result property="email" column="email" />
+      <result property="joinDate" column="joinDate" />
+   </resultMap> -->
+
+
+	
+    <!-- dao의 메서드 이름을 맞춰준다.매개변수도 이름을 맞춰야 실행된다. -->
+  	<insert id="mem_insert"  parameterType="kjhmemberVO" >
+ 	<!-- 
+ 	채번쿼리는 인설트 쿼리가 실행되기  전에 먼저 만들어 진다. key값으로 insert에 
+ 	placeholder에 삽입한다.
+ 	-->
+  		<selectKey keyProperty="m_num" resultType="String" 
+			order="BEFORE">
+ 
+  		  <![CDATA[
+  		SELECT
+		'M' || TO_CHAR(SYSDATE, 'YYYYMMDD') ||
+		LPAD(
+		NVL(MAX(SUBSTR(m_num,-4)), 0) + 1, 4, '0'
+		)
+		FROM kjhmember
+		WHERE
+		SUBSTR(m_num, 2, 8) = TO_CHAR(SYSDATE, 'YYYYMMDD')
+  	 	]]>
+  		</selectKey>
+  		
+	<![CDATA[
+	insert into kjhmember
+	values(
+	#{m_num},
+	#{m_id},
+	#{m_pw},
+	#{m_name},
+	#{m_phone},
+	#{m_email},
+	#{m_addr},
+	sysdate,
+	sysdate
+	)
+    ]]>
+	</insert>
+	
+	<resultMap type="java.util.HashMap" id="mem_select_m_num">
+		<result property="m_num" column="m_num"/>
+	</resultMap>
+	
+	<select id="mem_select_m_num" parameterType="kjhmemberVO" resultType="String">
+	<![CDATA[
+	select m_num from kjhmember where m_id = #{m_id} and m_pw = #{m_pw}
+	]]>
+	</select>
+	
+																
+	<select id="mem_val_id" parameterType="kjhmemberVO" resultType="String">
+	<![CDATA[
+	select m_id from kjhmember where m_id = #{m_id}
+	]]>
+	</select>	
+	
+	<select id="mem_select_kvo" parameterType="kjhmemberVO" resultType="kjhmemberVO">
+	<![CDATA[
+	select * from kjhmember where m_num = #{m_num}
+	]]>
+	</select>
+	
+	<update id="mem_update" parameterType="kjhmemberVO">
+	<![CDATA[
+    UPDATE kjhmember
+	SET 
+	m_pw = #{m_pw},
+	m_phone = #{m_phone}, 
+	m_email =#{m_email},
+	m_addr = #{m_addr},
+	m_update_date = sysdate
+	WHERE
+	m_id = #{m_id} AND m_num =#{m_num}
+	]]>
+	</update>
+	
+	<delete id="mem_delete" parameterType="kjhmemberVO">
+	<![CDATA[
+	DELETE kjhmember
+	WHERE m_id = #{m_id}
+	]]>
+	</delete>
+	
+   <!--  
+   <update id="updateMember"  parameterType="memberVO">
+     <![CDATA[
+	     update t_member
+	     set pwd=#{pwd}, name=#{name}, email=#{email}
+	     where
+	     id=#{id}
+      ]]>      
+   </update> 
+     
+   <delete id="deleteMember"  parameterType="String">
+	<![CDATA[
+	   delete from  t_member
+	   where
+	   id=#{id}
+	]]>      
+  </delete>
+  <select id="loginById"  resultType="memberVO"   parameterType="memberVO" >
+	<![CDATA[
+		select * from t_member	
+		where id=#{id} and pwd=#{pwd}		
+	]]>
+  </select>
+  <select id="mem_select_all" parameterType="kjhmemberVO" resultType="kjhmemberVO">
+      <![CDATA[
+         select * from kjhmember	order by m_reg_date desc	 	
+      ]]>
+	</select>
+   -->
+</mapper>

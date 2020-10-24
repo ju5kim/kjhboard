@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 여기서 설정한 네임 스페이스는 dao에서 인식할 수 있게 dao에서 실행하는 sqlsession.메서드 매개변수에 넣어준다. -->
+<mapper namespace="mapper.board">
+
+
+	<select id="board_select_list" resultType="kjhboardVO">
+	<![CDATA[
+	select * from kjhboard 
+	order by b_num desc
+	]]>
+	</select>
+
+	<select id="board_select_list_page" parameterType="pageVO"
+		resultType="kjhboardVO">
+	<![CDATA[
+	select * from(
+		select rownum as rec, b_num, b_subject, b_content, b_counts, b_images, b_reg_date, b_update_date, m_num from(
+			select * from 
+			kjhboard order by to_number(b_num) desc
+			)
+	)
+	where rec between #{start_row} and #{end_row}
+	]]>
+	</select>
+
+	<select id="board_select_all_count" resultType="Integer">
+		<![CDATA[
+		select count(b_num) from kjhboard
+		]]>
+	</select>
+
+
+
+	<select id="board_select_one" parameterType="kjhboardVO"
+		resultType="kjhboardVO">
+	<![CDATA[
+	select * from kjhboard where b_num = #{b_num}
+	]]>
+	</select>
+
+	<insert id="board_insert" parameterType="kjhboardVO">
+
+		<!-- <selectKey keyProperty="b_num" resultType="String"> <![CDATA[ select 
+			m_num|| seq_b_num.nextval from kjhboard where m_num ]]> </selectKey> -->
+		<!-- <if test="b_images != null"> <![CDATA[ INSERT INTO kjhboard (b_num, 
+			b_subject, b_content, b_images, b_reg_date, b_update_date, m_num )values( 
+			seq_b_num.nextval, #{b_subject}, #{b_content}, #{b_images}, sysdate, sysdate, 
+			#{m_num} ) ]]> </if> -->		
+		<![CDATA[
+	INSERT INTO kjhboard
+	(b_num,
+	b_subject,
+	b_content,
+	b_reg_date,
+	b_update_date,
+	m_num
+	
+	)values(
+	seq_b_num.nextval,
+	#{b_subject},
+	#{b_content},
+	sysdate,
+	sysdate,
+	#{m_num}
+	
+	)
+	]]>
+
+	</insert>
+
+
+</mapper>
