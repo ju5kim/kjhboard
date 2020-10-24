@@ -165,7 +165,7 @@
 			<systemPath>${basedir}/src/main/webapp/WEB-INF/lib/ojdbc6.jar</systemPath>
 		</dependency>
 
-    <!-- Commons FileUpload -->
+   <!-- 파일 업로드 Commons FileUpload -->
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
