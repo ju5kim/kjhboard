@@ -12,5 +12,4 @@ public interface BoardService {
 	public int board_insert(KjhBoardVO kbvo);
 	public int board_update(KjhBoardVO kbvo);
 	public int board_delete(KjhBoardVO kbvo);
-
 }
