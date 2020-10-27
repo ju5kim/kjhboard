@@ -18,12 +18,16 @@
 파일업로드
 -->
 	<%
-		String m_num = (String) session.getAttribute("m_num");
+		String m_num= 
+		(String) session.getAttribute("m_num");
 	%>
 	<%=m_num%>
 
-	<form action="/board/write_insert" id="board_form" name="board_form"
+	<form method="post" action="${contextPath}/board/write_insert" enctype="multipart/form-data" >
+	<!-- 	
+		<form method="post" action="${contextPath}/study/upload"
 		enctype="multipart/form-data">
+		 -->
 		<table id="" border="1">
 			<tr>
 				<td>글제목</td>
@@ -34,7 +38,7 @@
 				<td><input type="text" id="b_content" name="b_content"></td>
 			</tr>
 			<tr>
-				<td><input type="file" multiple="multiple" id="b_images" name="b_images"
+				<td><input type="file" id="b_images" name="b_images"
 					value="첨부파일"></td>
 			</tr>
 		</table>
