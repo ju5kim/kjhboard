@@ -51,14 +51,13 @@ public class BoardController {
 	// 게시글 목록으로 가는 페이지
 	@RequestMapping(value = "/board_list")
 	public String boardlist(HttpServletRequest request, PageVO pvo) {
-		System.out.println("화면에서 넘어오는 값");
-		System.out.println("now_page :::" + pvo.getNow_page());
-		System.out.println("now_group :::" + pvo.getNow_group());
+		log.info("화면에서 넘어오는 값");
+		log.info("now_page :::" + pvo.getNow_page());
+		log.info("now_group :::" + pvo.getNow_group());
 		List<KjhBoardVO> list = boardservice.board_select_list_page(pvo);
-		System.out.println("값 셋팅 실행 후");
-		System.out.println(pvo.getNow_page());
-		System.out.println(pvo.getNow_group());
-		System.out.println();
+		log.info("값 셋팅 실행 후");
+		log.info(pvo.getNow_page());
+		log.info(pvo.getNow_group());
 		request.setAttribute("list", list);
 		request.setAttribute("pvo", pvo);
 		return "board_list";
@@ -75,10 +74,10 @@ public class BoardController {
 	public String loginOK(KjhMemberVO kvo, HttpServletRequest request) {
 		boolean result = memberservice.mem_longin(kvo, request);
 		if (result) {
-			System.out.println("로그인 완료");
+			log.info("로그인 완료");
 			return "forward:/board_list";
 		}
-		System.out.println("로그인 실패");
+		log.info("로그인 실패");
 		return "login_form";
 	}
 
@@ -101,9 +100,9 @@ public class BoardController {
 		ModelAndView mav = new ModelAndView();
 		boolean result = memberservice.mem_insert(kjhMemberVO, request);
 		if (result == true) {
-			System.out.println("회원가입성공");
+			log.info("회원가입성공");
 		} else {
-			System.out.println("회원가입 실패");
+			log.info("회원가입 실패");
 			mav.setViewName("register_form");
 		}
 		mav.setViewName("login_form");
@@ -113,13 +112,13 @@ public class BoardController {
 	// 마이페이지 이동 하면서 값을 가지고 와서 한다.
 	@RequestMapping(value = "/mypage")
 	public String myPage(HttpSession session, HttpServletRequest request, KjhMemberVO kvo) {
-		System.out.println("마이페이지 컨트롤러 실행");
+		log.info("마이페이지 컨트롤러 실행");
 		String m_num = (String) session.getAttribute("m_num");
-		System.out.println("m_num ::: " + m_num);
+		log.info("m_num ::: " + m_num);
 		kvo.setM_num(m_num);
 		kvo = memberservice.mem_select_kvo(kvo);
 		request.setAttribute("kvo", kvo);
-		System.out.println("mypage 컨트롤러 실행완료");
+		log.info("mypage 컨트롤러 실행완료");
 		return "mypage";
 	}
 
@@ -127,7 +126,7 @@ public class BoardController {
 	@RequestMapping(value = "/my_update")
 	public String mypage_update(KjhMemberVO kjhMemberVO, HttpServletRequest request) {
 		int result = memberservice.mem_update(kjhMemberVO, request);
-		System.out.println("업데이트실행 후 결과 값" + result);
+		log.info("업데이트실행 후 결과 값" + result);
 		request.setAttribute("result", result);
 		HttpSession session = request.getSession();
 		session.setAttribute("m_num", kjhMemberVO.getM_num());
@@ -137,7 +136,7 @@ public class BoardController {
 	// 회원 탈퇴 실행시
 	@RequestMapping(value = "/my_delete")
 	public String my_delete(KjhMemberVO kjhmemberVO, HttpSession session) {
-		System.out.println(kjhmemberVO.getM_id());
+		log.info(kjhmemberVO.getM_id());
 		boolean result = memberservice.mem_delete(kjhmemberVO);
 		session.invalidate();
 		return "forward:/board_list";
@@ -171,6 +170,7 @@ public class BoardController {
 //	public String write_insert(MultipartHttpServletRequest multipartRequest,KjhBoardVO kbvo,) {
 	public String write_insert(MultipartHttpServletRequest multipartRequest, HttpSession session) {
 		// List<MultipartFile> file_list = mpRequest.getFiles("file");
+		ModelAndView mav = new ModelAndView();
 		log.info("글쓰기 컨트롤러 시작");
 		Map map = new HashMap();
 		String m_num = (String) session.getAttribute("m_num");
@@ -181,23 +181,18 @@ public class BoardController {
 			String value = multipartRequest.getParameter(name);
 			map.put(name, value);
 		}
-		kbvo.setB_subject((String)map.get("b_subject"));
-		kbvo.setB_content((String)map.get("b_content"));
-		kbvo.setM_num((String)map.get("m_num"));
-		kbvo=boardservice.board_insert_select(kbvo);
-		// int result = boardservice.board_insert(kbvo);
-		// int result = boardservice.board_insert(null);
-		
-
+		kbvo.setB_subject((String) map.get("b_subject"));
+		kbvo.setB_content((String) map.get("b_content"));
+		kbvo.setM_num((String) map.get("m_num"));
+		kbvo = boardservice.board_insert_select(kbvo);
+		multipartRequest.setAttribute("kbvo", kbvo);
+//		mav.addObject("kbvo",kbvo);
+//		mav.setViewName("/board/board_detail");// post로 보낼때
+		// mav.setViewName("/board/board_detail"); get으로 보낼때
 		return "forward:/board_detail";
+		// return "forward:/board_detail";
 		// 다시 글 쓰기가 완료되면 글 상세페이지로 이동하고 글 상세페이지에서 글 수정 및 삭제를 한다.
-		//이렇게 가면 가지 않는거 같다
-	}
-
-	//
-	public String write() {
-
-		return null;
+		// 이렇게 가면 가지 않는거 같다
 	}
 
 	public ResponseEntity add_board_insert(MultipartHttpServletRequest multipartRequest, HttpServletResponse response)
@@ -271,19 +266,27 @@ public class BoardController {
 	}
 
 	// 글을 클릭했을때 상세페이지로 이동
-	@RequestMapping(value = "/board_detail",method = RequestMethod.POST)
-	public String write_detail(KjhBoardVO kbvo, MultipartHttpServletRequest request) {
-		System.out.println("상세페이지 컨트롤러 :::");
-		System.out.println("getB_num ::" + kbvo.getB_num());
-		System.out.println("getB_subject ::" + kbvo.getB_subject());
-		System.out.println("getB_content ::" + kbvo.getB_content());
+	@RequestMapping(value = "/board_detail", method = { RequestMethod.POST, RequestMethod.GET })
+//	public String write_detail(KjhBoardVO kbvo, HttpServletRequest request) { // 매개변수를 vo를 받으면 get이 자꾸 작동해서 에러난거임
+	public String write_detail(HttpServletRequest request) {
+		KjhBoardVO kbvo = (KjhBoardVO) request.getAttribute("kbvo");
+		if(kbvo == null) {
+			String b_num = (String) request.getParameter("b_num");
+			log.info(b_num);
+			kbvo = new KjhBoardVO();
+			kbvo.setB_num(b_num);	
+		}
+		log.info("상세페이지 컨트롤러 :::");
+		log.info("getB_num ::" + kbvo.getB_num());
+		log.info("getB_subject ::" + kbvo.getB_subject());
+		log.info("getB_content ::" + kbvo.getB_content());
 
-		//kbvo = boardservice.board_select_one(kbvo);
+		kbvo = boardservice.board_select_one(kbvo);
 		request.setAttribute("kbvo", kbvo);
-		System.out.println("상세페이지 컨트롤러 service :::");
-		System.out.println("getB_num ::" + kbvo.getB_num());
-		System.out.println("getB_subject ::" + kbvo.getB_subject());
-		System.out.println("getB_content ::" + kbvo.getB_content());
+//		log.info("상세페이지 컨트롤러 service :::");
+		log.info("getB_num ::" + kbvo.getB_num());
+		log.info("getB_subject ::" + kbvo.getB_subject());
+		log.info("getB_content ::" + kbvo.getB_content());
 
 		return "board_detail";
 	}

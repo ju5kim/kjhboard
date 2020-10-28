@@ -3,10 +3,13 @@ package com.kjh.board.service;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kjh.board.controller.BoardController;
 import com.kjh.board.dao.BoardDAO;
 import com.kjh.board.vo.KjhBoardVO;
 import com.kjh.board.vo.PageVO;
@@ -14,7 +17,7 @@ import com.kjh.board.vo.PageVO;
 @Transactional
 @Service
 public class BoardServiceImpl implements BoardService {
-
+	private static final Logger log = LoggerFactory.getLogger(BoardServiceImpl.class);
 	@Autowired
 	BoardDAO boardDAO;
 
@@ -141,6 +144,10 @@ public class BoardServiceImpl implements BoardService {
 	public KjhBoardVO board_insert_select(KjhBoardVO kbvo) {
 		int result = boardDAO.board_insert(kbvo);
 		kbvo = boardDAO.board_select_one(kbvo);
+		log.info(kbvo.getB_num());
+		log.info(kbvo.getB_subject());
+		log.info(kbvo.getB_content());
+		log.info(kbvo.getB_reg_date());
 		return kbvo;
 	}
 
