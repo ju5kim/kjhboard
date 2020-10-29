@@ -1,7 +1,10 @@
 package com.kjh.board.controller;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -23,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -32,11 +36,13 @@ import org.springframework.web.servlet.ModelAndView;
 import com.kjh.board.HomeController;
 import com.kjh.board.service.BoardService;
 import com.kjh.board.service.MemberService;
+import com.kjh.board.vo.ImageVO;
 import com.kjh.board.vo.KjhBoardVO;
 import com.kjh.board.vo.KjhMemberVO;
 import com.kjh.board.vo.PageVO;
 
 import lombok.extern.log4j.Log4j;
+import net.coobird.thumbnailator.Thumbnails;
 
 @Log4j
 @Controller
@@ -147,6 +153,7 @@ public class BoardController {
 	public String write_form() {
 		return "write_form";
 	}
+
 	/*
 	 * // 글쓰기완료되면 실행 // 글을 쓸때 이미지를 파일을 멀티파트 리퀘스트로 // 파일 업로드로 파일을 서버(내컴퓨터)에 저장한다. //
 	 * 그런데 그걸 저장하고 클라이언트 화면에서 보여지게 하기 위해서는 // 파일 경로와 파일 이름이 필요한데. // 글번호에 따라서 파일경로를
@@ -165,130 +172,139 @@ public class BoardController {
 	 * 나는 일단 vo를 2개 만들어서 작업을 하는 것을 해보자.
 	 * 
 	 */
-
+	/*
+	 * @RequestMapping(value = "/write_insert", method = RequestMethod.POST) //
+	 * public String write_insert(MultipartHttpServletRequest
+	 * multipartRequest,KjhBoardVO kbvo,) { public String
+	 * write_insert(MultipartHttpServletRequest multipartRequest, HttpSession
+	 * session) { // List<MultipartFile> file_list = mpRequest.getFiles("file");
+	 * ModelAndView mav = new ModelAndView(); log.info("글쓰기 컨트롤러 시작"); Map map = new
+	 * HashMap(); String m_num = (String) session.getAttribute("m_num"); KjhBoardVO
+	 * kbvo = new KjhBoardVO(); Enumeration enumer =
+	 * multipartRequest.getParameterNames(); while (enumer.hasMoreElements()) { //
+	 * 파라미터 들을 돌면서 그 값들을 vo에 담아야하는데. 지금 vo가 하나면 되는데 하나가 아니다. String name = (String)
+	 * enumer.nextElement(); String value = multipartRequest.getParameter(name);
+	 * map.put(name, value); } kbvo.setB_subject((String) map.get("b_subject"));
+	 * kbvo.setB_content((String) map.get("b_content")); kbvo.setM_num((String)
+	 * map.get("m_num")); kbvo = boardservice.board_insert_select(kbvo);
+	 * multipartRequest.setAttribute("kbvo", kbvo); // mav.addObject("kbvo",kbvo);
+	 * // mav.setViewName("/board_detail");// 바로 화면으로 전송 //
+	 * mav.setViewName("/board/board_detail"); get으로 보낼때 return
+	 * "forward:/board_detail"; // 다시 글 쓰기가 완료되면 글 상세페이지로 이동하고 글 상세페이지에서 글 수정 및 삭제를
+	 * 한다. }
+	 */
 	@RequestMapping(value = "/write_insert", method = RequestMethod.POST)
-//	public String write_insert(MultipartHttpServletRequest multipartRequest,KjhBoardVO kbvo,) {
-	public String write_insert(MultipartHttpServletRequest multipartRequest, HttpSession session) {
-		// List<MultipartFile> file_list = mpRequest.getFiles("file");
-		ModelAndView mav = new ModelAndView();
-		log.info("글쓰기 컨트롤러 시작");
-		Map map = new HashMap();
-		String m_num = (String) session.getAttribute("m_num");
-		KjhBoardVO kbvo = new KjhBoardVO();
-		Enumeration enumer = multipartRequest.getParameterNames();
-		while (enumer.hasMoreElements()) { // 파라미터 들을 돌면서 그 값들을 vo에 담아야하는데. 지금 vo가 하나면 되는데 하나가 아니다.
-			String name = (String) enumer.nextElement();
-			String value = multipartRequest.getParameter(name);
-			map.put(name, value);
-		}
-		kbvo.setB_subject((String) map.get("b_subject"));
-		kbvo.setB_content((String) map.get("b_content"));
-		kbvo.setM_num((String) map.get("m_num"));
-		kbvo = boardservice.board_insert_select(kbvo);
-		multipartRequest.setAttribute("kbvo", kbvo);
-//		mav.addObject("kbvo",kbvo);
-//		mav.setViewName("/board/board_detail");// post로 보낼때
-		// mav.setViewName("/board/board_detail"); get으로 보낼때
-		return "forward:/board_detail";
-		// return "forward:/board_detail";
-		// 다시 글 쓰기가 완료되면 글 상세페이지로 이동하고 글 상세페이지에서 글 수정 및 삭제를 한다.
-		// 이렇게 가면 가지 않는거 같다
-	}
-
-	public ResponseEntity add_board_insert(MultipartHttpServletRequest multipartRequest, HttpServletResponse response)
+	public String write_insert(MultipartHttpServletRequest multipartRequest, HttpSession session)
 			throws IllegalStateException, IOException {
-		List image_list = new ArrayList();
-		multipartRequest.setCharacterEncoding("UTF-8");
-		Map<String, Object> board_map = new HashMap<String, Object>();
-		Enumeration enu = multipartRequest.getParameterNames(); // 파라미터들을 map에 넣기 위해서
-		while (enu.hasMoreElements()) { // 이넘에 남아있는 동안 돌아간다.
-			String name = (String) enu.nextElement();
-			String value = multipartRequest.getParameter(name);
-			board_map.put(name, value);
-		}
-		List image_real_file_names = file_upload(multipartRequest);
-		board_map.put("image_real_file_names", image_real_file_names);
+		log.info("글쓰기 컨트롤러 시작");
+		String m_num = (String) session.getAttribute("m_num");
+		KjhBoardVO kbvo;
+		ImageVO imagevo;
+		List imagevo_list = new ArrayList();
+		kbvo = boardservice.kbvo_setting(multipartRequest);
+		kbvo = boardservice.board_insert_select(kbvo);// 처음에 인서트하고 해당 글번호로 조회한 값을 조회해서 kbvo에 담아서 리턴한다.
+		String b_num = kbvo.getB_num();
+		imagevo_list = boardservice.imagevo_setting(multipartRequest, b_num);
+		imagevo_list = boardservice.image_insert(imagevo_list, multipartRequest);
 
-		String b_num = (String) board_map.get("b_num");
-		String message;
-
-		ResponseEntity resentt = null;
-		HttpHeaders respons_header = new HttpHeaders();
-		respons_header.add("Content-Type", "text/html;charset=utf-8");
-		try {
-			// boardservice.modArticle(board_map);
-			if (image_real_file_names != null && image_real_file_names.size() != 0) {
-				File scr_file = new File("임시저장소의 이미지 파일full");
-				File dest_dir = new File("실제 저장할 폴더+글번호폴더");
-				FileUtils.moveFileToDirectory(scr_file, dest_dir, true);
-
-				String original_file_name = (String) board_map.get("");// 지금 맵안에 list가 들어가 있다.ㄴ
-				File old_file = new File("실제정소+글번호+이미지 파일full");
-				old_file.delete();
-			}
-			message = "<script>";
-			message += " alert('완료');";
-			message += " location.href='" + multipartRequest.getContextPath() + "/board/kjhboard?articleNO=" + b_num
-					+ "';";
-			message += " </script>";
-			resentt = new ResponseEntity(message, respons_header, HttpStatus.CREATED);
-		} catch (Exception e) {
-			File srcFile = new File("임시저장소 이미지 파일full");
-			srcFile.delete();
-			message = "<script>";
-			message += " alert('오류가 발생했습니다.');";
-			message += " location.href='" + multipartRequest.getContextPath() + "/board/kjhboard?articleNO=" + b_num
-					+ "';";
-			message += " </script>";
-			resentt = new ResponseEntity(message, respons_header, HttpStatus.CREATED);
-		}
-		return resentt;
+		multipartRequest.setAttribute("kbvo", kbvo);
+		multipartRequest.setAttribute("imagevo_list", imagevo_list);
+		return "forward:/board_detail";
 	}
 
-	public List file_upload(MultipartHttpServletRequest request) throws IllegalStateException, IOException {
-		List list = new ArrayList();
-		Iterator iterator = request.getFileNames();
-		String save_path = "c\\kjhboard\\images\\"; // 여기서 글번호를 받아서 추가해야한다.
-		while (iterator.hasNext()) {
-			String file_tag_name = (String) iterator.next();
-			MultipartFile multi_file = request.getFile(file_tag_name);
-			String orig_file_name = multi_file.getOriginalFilename();
-			list.add(orig_file_name);
-			File f = new File(save_path + orig_file_name);
-			if (multi_file.getSize() != 0) {
-				if (!f.exists()) {
-					f.getParentFile().mkdirs();
-				}
-				multi_file.transferTo(f); // 이걸 임시 저장소를 추가해서 이미지 파일을 생성했다?
-			}
-		}
-		return list;
-	}
-
+	/*
+	 * //글쓰기 되면서 파일 업로드 파일 업로드 public ResponseEntity
+	 * board_insert_with_file(MultipartHttpServletRequest multipartRequest,
+	 * HttpServletResponse response) throws IllegalStateException, IOException {
+	 * List image_list = new ArrayList();
+	 * multipartRequest.setCharacterEncoding("UTF-8"); Map<String, Object> board_map
+	 * = new HashMap<String, Object>(); Enumeration enu =
+	 * multipartRequest.getParameterNames(); // 파라미터들을 map에 넣기 위해서 while
+	 * (enu.hasMoreElements()) { // 이넘에 남아있는 동안 돌아간다. String name = (String)
+	 * enu.nextElement(); String value = multipartRequest.getParameter(name);
+	 * board_map.put(name, value); } List image_real_file_names =
+	 * file_upload(multipartRequest); board_map.put("image_real_file_names",
+	 * image_real_file_names);
+	 * 
+	 * String b_num = (String) board_map.get("b_num"); String message;
+	 * 
+	 * ResponseEntity resentt = null; HttpHeaders respons_header = new
+	 * HttpHeaders(); respons_header.add("Content-Type", "text/html;charset=utf-8");
+	 * try { // boardservice.modArticle(board_map); if (image_real_file_names !=
+	 * null && image_real_file_names.size() != 0) { File scr_file = new
+	 * File("임시저장소의 이미지 파일full"); File dest_dir = new File("실제 저장할 폴더+글번호폴더");
+	 * FileUtils.moveFileToDirectory(scr_file, dest_dir, true);
+	 * 
+	 * String original_file_name = (String) board_map.get("");// 지금 맵안에 list가 들어가
+	 * 있다.ㄴ File old_file = new File("실제정소+글번호+이미지 파일full"); old_file.delete(); }
+	 * message = "<script>"; message += " alert('완료');"; message +=
+	 * " location.href='" + multipartRequest.getContextPath() +
+	 * "/board/kjhboard?articleNO=" + b_num + "';"; message += " </script>"; resentt
+	 * = new ResponseEntity(message, respons_header, HttpStatus.CREATED); } catch
+	 * (Exception e) { File srcFile = new File("임시저장소 이미지 파일full");
+	 * srcFile.delete(); message = "<script>"; message += " alert('오류가 발생했습니다.');";
+	 * message += " location.href='" + multipartRequest.getContextPath() +
+	 * "/board/kjhboard?articleNO=" + b_num + "';"; message += " </script>"; resentt
+	 * = new ResponseEntity(message, respons_header, HttpStatus.CREATED); } return
+	 * resentt; }
+	 * 
+	 * public List file_upload(MultipartHttpServletRequest request) throws
+	 * IllegalStateException, IOException { List list = new ArrayList(); Iterator
+	 * iterator = request.getFileNames(); String save_path =
+	 * "c\\kjhboard\\images\\"; // 여기서 글번호를 받아서 추가해야한다. while (iterator.hasNext()) {
+	 * String file_tag_name = (String) iterator.next(); MultipartFile multi_file =
+	 * request.getFile(file_tag_name); String orig_file_name =
+	 * multi_file.getOriginalFilename(); list.add(orig_file_name); File f = new
+	 * File(save_path + orig_file_name);
+	 * 
+	 * if (multi_file.getSize() != 0) { if (!f.exists()) {
+	 * f.getParentFile().mkdirs(); } multi_file.transferTo(f); // 이걸 임시 저장소를 추가해서
+	 * 이미지 파일을 생성했다? } } return list; }
+	 */
 	// 글을 클릭했을때 상세페이지로 이동
 	@RequestMapping(value = "/board_detail", method = { RequestMethod.POST, RequestMethod.GET })
 //	public String write_detail(KjhBoardVO kbvo, HttpServletRequest request) { // 매개변수를 vo를 받으면 get이 자꾸 작동해서 에러난거임
 	public String write_detail(HttpServletRequest request) {
 		KjhBoardVO kbvo = (KjhBoardVO) request.getAttribute("kbvo");
-		if(kbvo == null) {
+		if (kbvo == null) {
 			String b_num = (String) request.getParameter("b_num");
-			log.info(b_num);
 			kbvo = new KjhBoardVO();
-			kbvo.setB_num(b_num);	
+			kbvo.setB_num(b_num);
+			kbvo = boardservice.board_select_one(kbvo);
+			List<ImageVO> list = boardservice.select_image(b_num);
+			request.setAttribute("imagevo_list", list);
+			request.setAttribute("kbvo", kbvo);
 		}
-		log.info("상세페이지 컨트롤러 :::");
-		log.info("getB_num ::" + kbvo.getB_num());
-		log.info("getB_subject ::" + kbvo.getB_subject());
-		log.info("getB_content ::" + kbvo.getB_content());
-
-		kbvo = boardservice.board_select_one(kbvo);
-		request.setAttribute("kbvo", kbvo);
-//		log.info("상세페이지 컨트롤러 service :::");
-		log.info("getB_num ::" + kbvo.getB_num());
-		log.info("getB_subject ::" + kbvo.getB_subject());
-		log.info("getB_content ::" + kbvo.getB_content());
-
+		
+		
 		return "board_detail";
+	}
+
+	@RequestMapping(value = "/download")
+	public void file_down_send(@RequestParam("image_file_name") String image_file_name,
+			@RequestParam("b_num") String b_num, HttpServletResponse response) throws IOException {
+		OutputStream outputStream = response.getOutputStream();
+		File image_file = new File("c:\\spring\\" + b_num + "\\" + image_file_name);
+		if (image_file.exists()) {
+			int index = image_file_name.indexOf(".");
+			String subst_file_name = image_file_name.substring(0, index);
+			File thumb = new File("c:\\spring\\" + b_num + "\\thumb\\" + subst_file_name);
+			thumb.getParentFile().mkdirs();
+			Thumbnails.of(image_file).size(150, 150).outputFormat("png").toFile(thumb);
+			thumb = new File("c:\\spring\\" + b_num + "\\thumb\\" + subst_file_name + ".png");
+			FileInputStream fileInputStream = new FileInputStream(thumb);
+			byte[] buffer = new byte[1024 * 8];
+			while (true) {
+				int count = fileInputStream.read(buffer);
+				if (count == -1) {
+					break;
+				}
+				outputStream.write(buffer, 0, count);
+			}
+			fileInputStream.close();
+			outputStream.close();
+		}
+
 	}
 
 	// 글 수정 시 이동

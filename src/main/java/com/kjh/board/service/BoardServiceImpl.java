@@ -1,23 +1,36 @@
 package com.kjh.board.service;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import com.kjh.board.controller.BoardController;
 import com.kjh.board.dao.BoardDAO;
+import com.kjh.board.vo.ImageVO;
 import com.kjh.board.vo.KjhBoardVO;
 import com.kjh.board.vo.PageVO;
+
+import net.coobird.thumbnailator.Thumbnails;
 
 @Transactional
 @Service
 public class BoardServiceImpl implements BoardService {
 	private static final Logger log = LoggerFactory.getLogger(BoardServiceImpl.class);
+	private static final String save_path_front = "c:\\spring\\";
+
 	@Autowired
 	BoardDAO boardDAO;
 
@@ -141,24 +154,132 @@ public class BoardServiceImpl implements BoardService {
 	}
 
 	@Override
+	public KjhBoardVO kbvo_setting(MultipartHttpServletRequest multipartRequest) {
+		KjhBoardVO kbvo = new KjhBoardVO();
+		Map map = new HashMap();
+		Enumeration enumer = multipartRequest.getParameterNames();
+		while (enumer.hasMoreElements()) { // 파라미터 들을 돌면서 그 값들을 vo에 담아야하는데. 지금 vo가 하나면 되는데 하나가 아니다.
+			String name = (String) enumer.nextElement();
+			log.info("멀티파트에 파라미터네임들 ::: " + name);
+			String value = multipartRequest.getParameter(name);
+			map.put(name, value);
+		}
+		kbvo.setB_subject((String) map.get("b_subject"));
+		kbvo.setB_content((String) map.get("b_content"));
+		kbvo.setM_num((String) map.get("m_num"));
+		Iterator iterator = multipartRequest.getFileNames();
+
+		return kbvo;
+	}
+
+	// 이게 일단 일반 글 테이블에 넣고(완료되었다면) (이미지파일이 있다면)이미지 테이블에도 넣고 그 다음에 파일업로드를 해야한다.
+	@Override
+	public List<ImageVO> imagevo_setting(MultipartHttpServletRequest multipartRequest, String b_num)
+			throws IllegalStateException, IOException {
+		List<ImageVO> list = new ArrayList<ImageVO>();
+		ImageVO imagevo = new ImageVO();
+
+		Iterator iterator = multipartRequest.getFileNames();
+		while (iterator.hasNext()) {
+			String file_name = (String) iterator.next();
+			MultipartFile multipartfile = multipartRequest.getFile(file_name);
+			String real_file_name = multipartfile.getOriginalFilename();
+			imagevo.setImage_file_name(real_file_name); // vo에 담는것
+			imagevo.setB_num(b_num);
+			list.add(imagevo);// 이게 지금 반복문 밖에서 imagevo객체가있는데 list에 imagevo객체가 차례대로 제대로 담길려나?
+
+//			File file_temp = new File(save_path_front + "temp\\" + real_file_name);
+//			File file_real = new File(save_path_front+"글번호\\"+real_file_name);
+//			if(multipartfile.getSize()>0) { //임시폴더에 파일을 먼저 만들고
+//				file_temp.getParentFile().mkdirs();
+//				multipartfile.transferTo(file_temp);
+//				if(true) { // 만약 이미지테이블에 데이터가 들어 갔다면 실제 파일 경로에 저장한다..
+//					file_real.getParentFile().mkdirs();
+//					FileUtils.moveFileToDirectory(file_temp, file_real, true);
+//					//multipartfile.transferTo(file_real);
+//				}
+//				file_temp.delete(); //업로드가 되었건 안되었건 임시저장소 파일은 삭제 해야한다.
+//			}
+
+		}
+
+		return list;
+	}
+	@Override
+	public List<ImageVO> select_image(String b_num) {
+		List<ImageVO> list = boardDAO.image_select_list(b_num);
+
+		return list;
+	}
+
+	@Override
+	public List<ImageVO> image_insert(List<ImageVO> list, MultipartHttpServletRequest multipartHttpServletRequest) {
+		for (int i = 0; i < list.size(); i++) {
+			ImageVO imagevo = (ImageVO) list.get(i);
+			int result = boardDAO.image_insert(imagevo);
+			if (result > 0) {
+				file_upload(imagevo, multipartHttpServletRequest);
+
+			} else {
+				log.info("이미지테이블 삽입 하지 않았습니다. ");
+			}
+			// 여기서 이미지 vo 리스트를 리턴하느냐 파일저장경로를 리턴하는가?
+		}
+		return list;
+	}// 이제 여기는 테이블에 삽입이 완료된 vo만 있다.
+
+	public void file_upload(ImageVO imagevo, MultipartHttpServletRequest multipartHttpServletRequest) {
+		Iterator iterator = multipartHttpServletRequest.getFileNames();
+		while (iterator.hasNext()) {
+			String file_tag_name = (String) iterator.next();
+			MultipartFile multipartFile = multipartHttpServletRequest.getFile(file_tag_name);
+			String real_file_name = multipartFile.getOriginalFilename();
+			File image_file = new File(save_path_front + imagevo.getB_num() + "\\" + real_file_name);
+			if (multipartFile.getSize() > 0) { // 파일이 존재한다면
+				if (!image_file.exists()) {
+					image_file.getParentFile().mkdirs();
+				}
+				try {
+					multipartFile.transferTo(image_file);
+				} catch (IllegalStateException | IOException e) {
+					e.printStackTrace();
+					log.info("파일업로드 실패");
+				}
+			} //
+
+		}
+	}
+
+	@Override
 	public KjhBoardVO board_insert_select(KjhBoardVO kbvo) {
-		int result = boardDAO.board_insert(kbvo);
+		int result = boardDAO.board_insert(kbvo); // 여기서 kbvo가 셋팅퇴어 나온다.
 		kbvo = boardDAO.board_select_one(kbvo);
-		log.info(kbvo.getB_num());
-		log.info(kbvo.getB_subject());
-		log.info(kbvo.getB_content());
-		log.info(kbvo.getB_reg_date());
 		return kbvo;
 	}
 
 	@Override
-	public String board_insert_with_map(Map map) {
-		// 여기서 맵 객체를 분리해서 boardVO에 담아서 보내서 게시판 테이블 인서트 시키고
+	public KjhBoardVO board_insert_select_file(KjhBoardVO kbvo, List list) {
+		int result = boardDAO.board_insert(kbvo);
+		String b_num = kbvo.getB_num();
+		for (int i = 0; i < list.size(); i++) {
+			ImageVO imagevo = (ImageVO) list.get(i);
+			imagevo.setB_num(b_num);
+			int result1 = boardDAO.image_insert(imagevo);
+			if (result1 > 0) { // 이미지테이블에 잘 들어갔다면 여기서 파일 업로드 하기
+//				file_upload(imagevo,); 
+				// 테이블에 넣고 파일업로드를 할려고 했는데 파일 업로드를 먼저하고 테이블에 넣어야겠다.
+			}
+		}
 
-		// 여기서 또 맵객체를 분리해서 imageVO에 담아서 보내서 이미지 테이블 인서트 시킨다.
-		// 그런데 여기 인서트를 시킬려면 글번호를 가지고 와야한다.
-
-		return null;
+		// 이전에 이미지vo 파일 이름은 이미지 vo에 담겨 있어야한다.
+		// 여기서 이미지vo를 활용해서 파일업로드 작업을 한다.
+		// 그런데 리턴 할때 boardVO에 담아서 리턴을 하는데 imageVO도 리턴을 해야 파일을 출력할 수 있을 것 같다.
+		// 그리고 셀렉트 할때는 board테이블과 image테이블을 조인한 값으로 출력을 해야할거 같다.
+		// 이미지테이블에 값넣고 리턴 받기
+//		file_upload(imageVO , MultipartHttpServletRequest multi); // 이미지vo에 값으로 파일 업로드 작동하기 리턴은 int?
+		// 하고 셀렉을 할떄는 조인해서 결과값을 출력해야하는데...
+		// 출력을 할때 필요한게 글번호와 파일이름이 필요하다.
+		return kbvo;
 	}
 
 	@Override
@@ -171,6 +292,12 @@ public class BoardServiceImpl implements BoardService {
 	public int board_delete(KjhBoardVO kbvo) {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	@Override
+	public String board_insert_with_map(Map map) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

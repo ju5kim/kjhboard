@@ -7,6 +7,8 @@
 	<typeAlias type="com.kjh.board.vo.KjhMemberVO"  alias="kjhmemberVO"/>
 	<typeAlias type="com.kjh.board.vo.KjhBoardVO"  alias="kjhboardVO" /> 
 	<typeAlias type="com.kjh.board.vo.PageVO"  alias="pageVO" /> 
+	<typeAlias type="com.kjh.board.vo.ImageVO"  alias="imageVO" /> 
+	
 	
 		<!--
 		<typeAlias type="com.myspring.pro30.board.vo.ArticleVO"  alias="articleVO" />

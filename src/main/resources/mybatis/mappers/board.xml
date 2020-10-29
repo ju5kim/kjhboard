@@ -43,8 +43,7 @@
 	]]>
 	</select>
 
-	<insert id="board_insert" parameterType="kjhboardVO" >
-
+	<insert id="board_insert" parameterType="kjhboardVO">
 		<![CDATA[
 	INSERT INTO kjhboard
 	(b_num,
@@ -63,32 +62,36 @@
 	#{m_num}
 	)
 	]]>
-		<selectKey order="AFTER" resultType="String" keyProperty="b_num">
+		<selectKey order="AFTER" resultType="String"
+			keyProperty="b_num">
 		<![CDATA[	select seq_b_num.currval from dual]]>
 		</selectKey>
 	</insert>
-	
 
-	
-<!-- 
-	<insert id="insert_new_image" parameterType="java.util.map">
-		<foreach collection="list" item="item" open="INSERT ALL"
-			separator=" " close="SELECT * FROM DUAL">
-			INTO image(
-			image_num,image_file_name,
-			reg_date,b_num
-			)VALUES(
-			#{item.image_num},
-			#{item.image_file_name},
-			sysdate,
-			#{item.b_num}
-			)
-		</foreach>
+	<insert id="image_insert" parameterType="imageVO">
+	<![CDATA[
+		insert into image
+		(image_num,
+		image_file_name,
+		reg_date,
+		b_num
+		)values(
+		seq_imagevo.nextval,
+		#{image_file_name},
+		sysdate,
+		#{b_num}
+		)
+		]]>
+		<selectKey order="AFTER" resultType="String"
+			keyProperty="image_num">
+			<![CDATA[	select seq_imagevo.currval from dual]]>
+		</selectKey>
+
 	</insert>
-
-	<select id="select_image_num" resultType="int">
-		select nvl(max(image_num),0) from image
+	<select id="select_image" resultType="imageVO"
+		parameterType="String">
+		select * from image where b_num = #{b_num}
 	</select>
- -->
+
 
 </mapper>
