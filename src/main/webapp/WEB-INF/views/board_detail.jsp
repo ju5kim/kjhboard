@@ -65,8 +65,39 @@
 			<td><%=kbvo.getB_reg_date()%></td>
 		</tr>
 	</table>
-	<input type="text" id="" name="" value="수정하기">
-	<input type="text" id="" value="글목록으로 가기">
+	<button>수정하기</button>
+	<button>글 목록으로 이동하기</button>
+	<div>댓글목록</div>
+	<br>
+	<%
+		String m_num = (String) session.getAttribute("m_num");
+	if (m_num != "") {
+	%>
+	<form id="" name="">
+		<div>회원번호</div>
+		<input type="text" id="comment" name="comment"><input
+			type="submit" id="" value="등록">
+	</form>
 
+	<%
+		}
+	%>
+	<br>
+	<%
+		if ("댓글 목록이 있다면" != null) { //댓글 목록 출력
+	%>
+	<table>
+		<%
+			for (int i = 0; i < 10; i++) {//출력된 댓글들 중 하나 클릭하면  대댓글 여부 체크하고 출력
+		%>
+		<tr>
+			<td><div>글쓴이표시</div>
+				<div>제목표시하기-제목을 눌렀을 때 대댓글이 있다면 아래에 늘어나서 표시되게 한다.</div></td>
+		</tr>
+		<%
+			}
+		}
+		%>
+	</table>
 </body>
 </html>

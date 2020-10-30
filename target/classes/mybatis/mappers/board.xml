@@ -64,7 +64,9 @@
 	]]>
 		<selectKey order="AFTER" resultType="String"
 			keyProperty="b_num">
-		<![CDATA[	select seq_b_num.currval from dual]]>
+		<![CDATA[	
+		select seq_b_num.currval from dual
+		]]>
 		</selectKey>
 	</insert>
 
@@ -84,13 +86,17 @@
 		]]>
 		<selectKey order="AFTER" resultType="String"
 			keyProperty="image_num">
-			<![CDATA[	select seq_imagevo.currval from dual]]>
+			<![CDATA[	
+			select seq_imagevo.currval from dual
+			]]>
 		</selectKey>
 
 	</insert>
 	<select id="select_image" resultType="imageVO"
 		parameterType="String">
+		<![CDATA[
 		select * from image where b_num = #{b_num}
+		]]>
 	</select>
 
 

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 여기서 설정한 네임 스페이스는 dao에서 인식할 수 있게 dao에서 실행하는 sqlsession.메서드 매개변수에 넣어준다. -->
+<mapper namespace="mapper.comments">
+	<insert id="insert_comments">
+	<![CDATA[ 
+		insert into comments
+		()
+		values
+		()
+	]]>
+	</insert>
+
+
+</mapper>
