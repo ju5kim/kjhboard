@@ -6,14 +6,59 @@
 
 <!-- 여기서 설정한 네임 스페이스는 dao에서 인식할 수 있게 dao에서 실행하는 sqlsession.메서드 매개변수에 넣어준다. -->
 <mapper namespace="mapper.comments">
-	<insert id="insert_comments">
+	<insert id="reply_insert" parameterType="commentsVO">
 	<![CDATA[ 
 		insert into comments
-		()
+		(c_num,
+		c_c_num,
+		m_num,
+		c_content,
+		c_reg_date,
+		b_num
+		)
 		values
-		()
+		(
+		seq_comments.nextval,
+		0,
+		#{m_num},
+		#{c_content},
+		sysdate,
+		#{b_num}
+		)
 	]]>
+		<selectKey order="AFTER" keyProperty="c_num"
+			resultType="String">
+		<![CDATA[ 
+		select seq_comments.currval from dual
+		]]>
+		</selectKey>
 	</insert>
+	<select id="reply_select" parameterType="commentsVO">
+		<![CDATA[ 
+		select * from comments where c_num = #{c_num}
+		]]>
+	</select>
+	<select id="reply_select_all" parameterType="String" resultType="commentsVO">
+		<![CDATA[ 
+		select * from comments where b_num = #{b_num}
+		]]>
+	</select>
+
+	<update id="reply_update" parameterType="commentsVO">
+			<![CDATA[ 
+		update comments
+		set c_content = #{c_content}
+		where c_num = #{c_num} 
+			]]>
+	</update>
+
+	<delete id="">
+		<![CDATA[ 
+		update comments
+		set c_content = #{c_content}
+		where c_num = #{c_num} 
+			]]>
+	</delete>
 
 
 </mapper>

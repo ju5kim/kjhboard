@@ -1,3 +1,4 @@
+<%@page import="com.kjh.board.vo.CommentsVO"%>
 <%@page import="java.awt.font.ImageGraphicAttribute"%>
 <%@page import="com.kjh.board.vo.ImageVO"%>
 <%@page import="java.util.Enumeration"%>
@@ -73,10 +74,10 @@
 		String m_num = (String) session.getAttribute("m_num");
 	if (m_num != "") {
 	%>
-	<form id="" name="">
-		<div>회원번호</div>
-		<input type="text" id="comment" name="comment"><input
-			type="submit" id="" value="등록">
+	<form id="" name="" action="/board/reply_insert">
+		<div><%=m_num %></div>
+		<input type="text" id="comment" name="comment"> <br>
+		<input			type="submit" id="" value="등록">
 	</form>
 
 	<%
@@ -84,15 +85,17 @@
 	%>
 	<br>
 	<%
-		if ("댓글 목록이 있다면" != null) { //댓글 목록 출력
+		List reply_list = (List) request.getAttribute("reply_list");
+	if (reply_list.size() > 0) { //댓글 목록 출력
 	%>
 	<table>
 		<%
-			for (int i = 0; i < 10; i++) {//출력된 댓글들 중 하나 클릭하면  대댓글 여부 체크하고 출력
+			for (int i = 0; i < reply_list.size(); i++) {//출력된 댓글들 중 하나 클릭하면  대댓글 여부 체크하고 출력
+			CommentsVO commentsVO = (CommentsVO)reply_list.get(i);
 		%>
 		<tr>
-			<td><div>글쓴이표시</div>
-				<div>제목표시하기-제목을 눌렀을 때 대댓글이 있다면 아래에 늘어나서 표시되게 한다.</div></td>
+			<td><div><%= commentsVO.getM_num()%></div> </td>
+				<td><div><%=commentsVO.getC_content()%></div></td> <td><div><%=commentsVO.getC_reg_date()%></div><td> 제목표시하기-제목을 눌렀을 때 대댓글이 있다면 아래에 늘어나서 표시되게 한다.
 		</tr>
 		<%
 			}

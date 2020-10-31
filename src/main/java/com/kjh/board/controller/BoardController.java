@@ -32,10 +32,13 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.MultipartRequest;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.method.annotation.UriComponentsBuilderMethodArgumentResolver;
 
 import com.kjh.board.HomeController;
 import com.kjh.board.service.BoardService;
+import com.kjh.board.service.CommentService;
 import com.kjh.board.service.MemberService;
+import com.kjh.board.vo.CommentsVO;
 import com.kjh.board.vo.ImageVO;
 import com.kjh.board.vo.KjhBoardVO;
 import com.kjh.board.vo.KjhMemberVO;
@@ -53,6 +56,9 @@ public class BoardController {
 
 	@Autowired
 	BoardService boardservice;
+
+	@Autowired
+	CommentService commentservice;
 
 	// 게시글 목록으로 가는 페이지
 	@RequestMapping(value = "/board_list")
@@ -209,13 +215,15 @@ public class BoardController {
 			kbvo.setB_num(b_num);
 			kbvo = boardservice.board_select_one(kbvo);
 			List<ImageVO> list = boardservice.select_image(b_num);
+			List reply_list = commentservice.reply_select_all(b_num);// 댓글 목록 모두 출력하기
+			request.setAttribute("reply_list", reply_list);
 			request.setAttribute("imagevo_list", list);
 			request.setAttribute("kbvo", kbvo);
 		}
 		return "board_detail";
 	}
 
-	//글 상세 페이지에서 이미지를 출력하는 컨트롤러 여기서 썸네일 이미지도 저장한다.
+	// 글 상세 페이지에서 이미지를 출력하는 컨트롤러 여기서 썸네일 이미지도 저장한다.
 	@RequestMapping(value = "/download")
 	public void file_down_send(@RequestParam("image_file_name") String image_file_name,
 			@RequestParam("b_num") String b_num, HttpServletResponse response) throws IOException {
@@ -242,11 +250,11 @@ public class BoardController {
 		}
 
 	}
-	
+
 	// 글 수정 시 이동
 	// @RequestMapping
 	public String write_update() {
-		
+
 		return null;
 	}
 
@@ -258,37 +266,68 @@ public class BoardController {
 	}
 
 	// 댓글 달기
+	@RequestMapping(value = "/reply_insert")
+	public CommentsVO reply_insert(CommentsVO commentsVO,HttpServletRequest request,HttpSession session) {
+		// 여기에서 commentsVO에 셋팅 되어서 넘어오는게
+		// 최상위 글 번호
+		// 글쓴이
+		// 글 내용
+		String b_num = commentsVO.getB_num();// 최상위 글 번호
+		String c_c_num = commentsVO.getC_c_num(); // 대 댓글 번호//평범하게 입력시 대 댓글은 null
+		String m_num = commentsVO.getM_num();// 
+		String c_content = commentsVO.getC_content();//
+		KjhBoardVO kbvo=(KjhBoardVO)request.getAttribute("kbvo");
+		log.info(kbvo.getB_num());
+		log.info(kbvo.getM_num());
+		
+		
+		commentsVO = commentservice.reply_insert(commentsVO);
+		
+		log.info("commentsVO.b_num ::: " + b_num);
+		log.info("commentsVO.c_c_num ::: " + c_c_num);
+		log.info("commentsVO.m_num ::: " + m_num);
+		log.info("commentsVO.c_content ::: " + c_content);
+		return commentsVO;
+		/*
+		 * 화면이동은 ajax로 하는게 맞는거 같은데 일단 여기서는 댓글을 등록하고 나면 detail화면에서 다시 이동해서 댓글들이 나온다.
+		 */
+	}
+
+	// 댓글 조회 한것을 위에 detail 컨트롤러에 적용시킴
 	// @RequestMapping
-	public String reply_insert() {
-		
+	public String reply_select_all(HttpServletRequest request) {
+		String b_num =(String)request.getAttribute("b_num");
+		List reply_list = commentservice.reply_select_all(b_num);// 댓글 목록 모두 출력하기
+		request.setAttribute("reply_list", reply_list);
 		return null;
 	}
-	// 댓글 조회
-	public String reply_select() {
-		
-		return null;
-	}
+
 	// 댓글 수정
 	public String reply_update() {
 		return null;
 	}
+
 	// 댓글 삭제
 	public String reply_delete() {
 		return null;
 	}
+
 	// 대댓글 달기
 	public String reply_re_insert() {
-		
+
 		return null;
 	}
+
 	// 대댓글 조회
 	public String reply_re_select() {
 		return null;
 	}
+
 	// 대댓글 수정
 	public String reply_re_update() {
 		return null;
 	}
+
 	// 대댓글 삭제
 	public String reply_re_delete() {
 		return null;

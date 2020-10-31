@@ -10,11 +10,5 @@
 	<typeAlias type="com.kjh.board.vo.ImageVO"  alias="imageVO" /> 
 	<typeAlias type="com.kjh.board.vo.CommentsVO"  alias="commentsVO" /> 
 	
-	
-	
-		<!--
-		<typeAlias type="com.myspring.pro30.board.vo.ArticleVO"  alias="articleVO" />
-		<typeAlias type="com.myspring.pro30.board.vo.ImageVO"  alias="imageVO" />
-		-->
 	</typeAliases>
 </configuration>
