@@ -19,7 +19,7 @@
 		values
 		(
 		seq_comments.nextval,
-		0,
+		'0',
 		#{m_num},
 		#{c_content},
 		sysdate,
@@ -33,14 +33,14 @@
 		]]>
 		</selectKey>
 	</insert>
-	<select id="reply_select" parameterType="commentsVO">
+	<select id="reply_select" parameterType="commentsVO" resultType="commentsVO">
 		<![CDATA[ 
 		select * from comments where c_num = #{c_num}
 		]]>
 	</select>
 	<select id="reply_select_all" parameterType="String" resultType="commentsVO">
 		<![CDATA[ 
-		select * from comments where b_num = #{b_num}
+		select * from comments where b_num = #{b_num} order by c_num desc
 		]]>
 	</select>
 

@@ -13,6 +13,78 @@
 <head>
 <meta charset="UTF-8">
 <title>글 상세페이지</title>
+<script type="text/javascript">
+	/*function reply_re_form(i){
+		
+	var reply_table = document.getElementById('reply_table');
+	var reply_re_tr = document.getElementById('reply_re'+i); // tr태그
+
+	var reply_re_tr_td0 = document.createElement('td0');
+	reply_re_tr.appendChild(reply_re_tr_td0);
+	var reply_re_tr_td = document.createElement('td');
+	reply_re_tr.appendChild(reply_re_tr_td);
+	
+	var reply_re_tr_td_form = document.createElement('form');
+	reply_re_tr_td_form.setAttribute("action","/board/reply_re_insert");
+	reply_re_tr_td.appendChild(reply_re_tr_td_form);
+	
+	var reply_re_tr_td_form_input = document.createElement('input');
+//	document.reply_re_tr_td_form_input.setAttribute("type", "text"); 이렇게 하면 에러 난다.
+	reply_re_tr_td_form_input.setAttribute("type", "text");
+	reply_re_tr_td_form_input.setAttribute("name", "c_content");
+	reply_re_tr_td_form.appendChild(reply_re_tr_td_form_input);
+	
+	
+	//글 해당 글에서 회원값
+	var reply_re_tr_td_form_input_m_num = document.createElement('input');
+	reply_re_tr_td_form_input_m_num.setAttribute("type", "hidden");
+	reply_re_tr_td_form_input_m_num.setAttribute("name", "c_content");
+	reply_re_tr_td_form.appendChild(reply_re_tr_td_form_input_m_num);
+	
+	
+	
+	var reply_re_tr_td_form_submit = document.createElement('input');
+	reply_re_tr_td_form_submit.setAttribute("type","submit");
+	reply_re_tr_td_form_submit.setAttribute("value","등록하기");
+	reply_re_tr_td_form.appendChild(reply_re_tr_td_form_submit);
+	}
+	*/
+	
+	function reply_re_form(i){
+	/*	var reply_re_form_tag = document.getElementById('reply_re_form_tag'+i);
+		var c_content = reply_re_form_tag.getElementById('c_content');
+		var submit = reply_re_form_tag.getElementById('submit');
+		c_content.setAttribute("type","text");
+		submit.setAttribute("type","submit");
+		 에러 reply_re_form_tag.getElementById is not a function
+	*/	
+	
+		//var reply_re_form_tag = document.getElementById('reply_re_form_tag'+i);
+		//reply_re_form_tag.c_content.type  = "text";  에러 c_content가 Cannot read property 'c_content' of undefined
+		//var c_content = document.reply_re_form_tag.getElementByName('c_content'); 에러 Cannot read property 'getElementByName' of undefined
+		//var c_content = reply_re_form_tag.getElementsByTagName("c_content");
+		//var submit = reply_re_form_tag.getElementsByTagName("submit");
+	
+//		c_content.type = "text";
+//		submit.type ="submit";
+		//var submit = reply_re_form_tag.submit;
+		//c_content.setAttribute("type","text");
+		
+		//submit.setAttribute("type","submit");
+		//위에는 다 에러
+			alert(">>>>>");
+		var hidden_td = document.getElementById('hidden_td'+i);
+			hidden_td.removeAttribute("hidden");
+			alert(c_content);
+		var input = document.forms['reply_re_form_tag'+i].elements['c_content'];
+		input.setAttribute("type","text");
+		var submit = document.forms['reply_re_form_tag'+i].elements['submit'];
+		submit.setAttribute("type","submit");
+	
+	
+	}
+</script>
+
 </head>
 <body>
 	<!-- 
@@ -68,39 +140,62 @@
 	</table>
 	<button>수정하기</button>
 	<button>글 목록으로 이동하기</button>
-	<div>댓글목록</div>
 	<br>
+	<h3>댓글 쓰기</h3>
 	<%
 		String m_num = (String) session.getAttribute("m_num");
 	if (m_num != "") {
 	%>
-	<form id="" name="" action="/board/reply_insert">
-		<div><%=m_num %></div>
-		<input type="text" id="comment" name="comment"> <br>
-		<input			type="submit" id="" value="등록">
+	<form id="" name="" action="/board/reply_insert" >
+		내정보 : <input type="text" id="m_num" name="m_num" value="<%=m_num %>" readonly="readonly">
+		<input type="text" id="c_content" name="c_content">
+		<input type="submit" id="submit" name="submit" value="등록">
+		<input type="hidden" id="b_num" name="b_num" value="<%=kbvo.getB_num()%>">
 	</form>
 
 	<%
 		}
 	%>
 	<br>
+		<div>댓글목록</div>
+	<table border="1" id="reply_table">
+	<tr> <td>작성자</td><td>댓글내용</td><td>작성일자</td>
+			</tr> 
 	<%
 		List reply_list = (List) request.getAttribute("reply_list");
-	if (reply_list.size() > 0) { //댓글 목록 출력
-	%>
-	<table>
-		<%
-			for (int i = 0; i < reply_list.size(); i++) {//출력된 댓글들 중 하나 클릭하면  대댓글 여부 체크하고 출력
-			CommentsVO commentsVO = (CommentsVO)reply_list.get(i);
+	if(reply_list !=null){
+		if (reply_list.size() > 0) { //댓글 목록 출력
 		%>
-		<tr>
-			<td><div><%= commentsVO.getM_num()%></div> </td>
-				<td><div><%=commentsVO.getC_content()%></div></td> <td><div><%=commentsVO.getC_reg_date()%></div><td> 제목표시하기-제목을 눌렀을 때 대댓글이 있다면 아래에 늘어나서 표시되게 한다.
-		</tr>
-		<%
-			}
+			
+			
+				<%
+					for (int i = 0; i < reply_list.size(); i++) {//출력된 댓글들 중 하나 클릭하면  대댓글 여부 체크하고 출력
+					CommentsVO commentsVO = (CommentsVO)reply_list.get(i);
+					String b_num = commentsVO.getB_num();
+					String c_num = commentsVO.getC_c_num();
+				%>
+				<tr onclick="reply_re_form(<%=i%>)">
+					<td><%=commentsVO.getM_num()%></td> <td ><%=commentsVO.getC_content()%></td><td><%=commentsVO.getC_reg_date()%></td> 
+				</tr>
+				<tr>
+				<td hidden="true" id="hidden_td<%=i%>"> 
+				<form id="reply_re_form_tag<%=i%>" name="reply_re_form_tag<%=i%>" action="/board/reply_re_insert">
+				<input type="hidden" name="m_num"  value="<%=m_num%>"> <!-- 현재 로그인한 세션의 회원번호 -->
+				<input type="hidden" name="b_num" value="<%=b_num%>">
+				<input type="hidden" name="c_num" value="<%=c_num%>">
+				<input type="hidden" name="c_content" id="c_content">
+				<input type="hidden" name="submit" id="submit" value="등록하기">
+				</form>
+				</td>
+				</tr>
+<%
+					}
 		}
-		%>
-	</table>
+	}
+	
+%>
+
+</table>
+	제목표시하기-제목을 눌렀을 때 대댓글이 있다면 아래에 늘어나서 표시되게 한다.
 </body>
 </html>

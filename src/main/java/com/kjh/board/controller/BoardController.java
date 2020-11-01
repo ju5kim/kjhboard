@@ -179,7 +179,7 @@ public class BoardController {
 	 * 
 	 */
 	/*
-	 * 파라미터 들을 돌면서 그 값들을 vo에 담아야하는데. 지금 vo가 하나면 되는데 하나가 아니다. String name = (String)
+	 * 파라미터 들을 돌면서 그 값들을 vo에 담아야하는데. 지금 vo가 하나면 되는데 하나가 아니다.
 	 * // mav.setViewName("/board_detail");// 바로 화면으로 전송 //
 	 * mav.setViewName("/board/board_detail"); get으로 보낼때 return
 	 * "forward:/board_detail"; // 다시 글 쓰기가 완료되면 글 상세페이지로 이동하고 글 상세페이지에서 글 수정 및 삭제를
@@ -188,7 +188,7 @@ public class BoardController {
 	@RequestMapping(value = "/write_insert", method = RequestMethod.POST)
 	public String write_insert(MultipartHttpServletRequest multipartRequest, HttpSession session)
 			throws IllegalStateException, IOException {
-		log.info("글쓰기 컨트롤러 시작");
+		log.info("글쓰기 컨트롤러 시작 :::");
 		String m_num = (String) session.getAttribute("m_num");
 		KjhBoardVO kbvo;
 		ImageVO imagevo;
@@ -201,25 +201,29 @@ public class BoardController {
 
 		multipartRequest.setAttribute("kbvo", kbvo);
 		multipartRequest.setAttribute("imagevo_list", imagevo_list);
-		return "forward:/board_detail";
+		return "forward:/board_detail"; //컨트롤러를 걸치지 않고 글 상세 페이지로 바로 이동??
 	}
 
 	// 글을 클릭했을때 상세페이지로 이동
 	@RequestMapping(value = "/board_detail", method = { RequestMethod.POST, RequestMethod.GET })
 //	public String write_detail(KjhBoardVO kbvo, HttpServletRequest request) { // 매개변수를 vo를 받으면 get이 자꾸 작동해서 에러난거임
 	public String write_detail(HttpServletRequest request) {
-		KjhBoardVO kbvo = (KjhBoardVO) request.getAttribute("kbvo");
-		if (kbvo == null) {
+		log.info("board_detail 컨트롤러 시작 :::");
+		KjhBoardVO kbvo = (KjhBoardVO) request.getAttribute("kbvo");//글쓰기 완료 후 넘어온다.
+		
+		if (kbvo== null || kbvo.getB_num() == "") { //글번호 누른 경우
+			log.info("kbvo로 값이 넘어오지 않았음 ::: ");
 			String b_num = (String) request.getParameter("b_num");
 			kbvo = new KjhBoardVO();
 			kbvo.setB_num(b_num);
 			kbvo = boardservice.board_select_one(kbvo);
-			List<ImageVO> list = boardservice.select_image(b_num);
+			List<ImageVO> imagevo_list = boardservice.select_image(b_num);
 			List reply_list = commentservice.reply_select_all(b_num);// 댓글 목록 모두 출력하기
 			request.setAttribute("reply_list", reply_list);
-			request.setAttribute("imagevo_list", list);
+			request.setAttribute("imagevo_list", imagevo_list);
 			request.setAttribute("kbvo", kbvo);
 		}
+		
 		return "board_detail";
 	}
 
@@ -267,43 +271,52 @@ public class BoardController {
 
 	// 댓글 달기
 	@RequestMapping(value = "/reply_insert")
-	public CommentsVO reply_insert(CommentsVO commentsVO,HttpServletRequest request,HttpSession session) {
-		// 여기에서 commentsVO에 셋팅 되어서 넘어오는게
-		// 최상위 글 번호
-		// 글쓴이
-		// 글 내용
+	public String reply_insert(CommentsVO commentsVO, HttpServletRequest request, HttpSession session) {
+		log.info("reply_insert 컨트롤러 시작 ::: ");
+		ModelAndView mav = new ModelAndView();
 		String b_num = commentsVO.getB_num();// 최상위 글 번호
 		String c_c_num = commentsVO.getC_c_num(); // 대 댓글 번호//평범하게 입력시 대 댓글은 null
-		String m_num = commentsVO.getM_num();// 
+		String m_num = commentsVO.getM_num();//
 		String c_content = commentsVO.getC_content();//
-		KjhBoardVO kbvo=(KjhBoardVO)request.getAttribute("kbvo");
-		log.info(kbvo.getB_num());
-		log.info(kbvo.getM_num());
-		
-		
-		commentsVO = commentservice.reply_insert(commentsVO);
-		
 		log.info("commentsVO.b_num ::: " + b_num);
 		log.info("commentsVO.c_c_num ::: " + c_c_num);
 		log.info("commentsVO.m_num ::: " + m_num);
 		log.info("commentsVO.c_content ::: " + c_content);
-		return commentsVO;
+
+//		여기서 주의 해야 하는게 form 태그의 내부에 값들만 넘어오고 화면에 있던 request객체는 넘어오지 않았다.
+//		KjhBoardVO kbvo = (KjhBoardVO) request.getAttribute("kbvo");
+//		log.info(kbvo.getB_num()); // 넘어 오지 않았다.
+//		log.info(kbvo.getM_num());
+
+		commentsVO = commentservice.reply_insert(commentsVO);
+		log.info("서비스 실행 후값 ::: ");
+		b_num = commentsVO.getB_num();// 최상위 글 번호
+		c_c_num = commentsVO.getC_c_num(); // 대 댓글 번호//평범하게 입력시 대 댓글은 null
+		m_num = commentsVO.getM_num();//
+		c_content = commentsVO.getC_content();//
+		log.info("commentsVO.b_num ::: " + b_num);
+		log.info("commentsVO.c_c_num ::: " + c_c_num);
+		log.info("commentsVO.m_num ::: " + m_num);
+		log.info("commentsVO.c_content ::: " + c_content);
+		return "forward:/board_detail";
 		/*
 		 * 화면이동은 ajax로 하는게 맞는거 같은데 일단 여기서는 댓글을 등록하고 나면 detail화면에서 다시 이동해서 댓글들이 나온다.
 		 */
 	}
 
 	// 댓글 조회 한것을 위에 detail 컨트롤러에 적용시킴
-	// @RequestMapping
+	/* @RequestMapping
 	public String reply_select_all(HttpServletRequest request) {
-		String b_num =(String)request.getAttribute("b_num");
+		String b_num = (String) request.getAttribute("b_num");
 		List reply_list = commentservice.reply_select_all(b_num);// 댓글 목록 모두 출력하기
 		request.setAttribute("reply_list", reply_list);
 		return null;
 	}
-
+	 */
+	
 	// 댓글 수정
 	public String reply_update() {
+
 		return null;
 	}
 
