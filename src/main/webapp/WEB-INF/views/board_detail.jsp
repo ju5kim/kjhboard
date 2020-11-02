@@ -146,56 +146,63 @@
 		String m_num = (String) session.getAttribute("m_num");
 	if (m_num != "") {
 	%>
-	<form id="" name="" action="/board/reply_insert" >
-		내정보 : <input type="text" id="m_num" name="m_num" value="<%=m_num %>" readonly="readonly">
-		<input type="text" id="c_content" name="c_content">
-		<input type="submit" id="submit" name="submit" value="등록">
-		<input type="hidden" id="b_num" name="b_num" value="<%=kbvo.getB_num()%>">
+	<form id="" name="" action="/board/reply_insert">
+		내정보 : <input type="text" id="m_num" name="m_num" value="<%=m_num%>"
+			readonly="readonly"> <input type="text" id="c_content"
+			name="c_content"> <input type="submit" id="submit"
+			name="submit" value="등록"> <input type="hidden" id="b_num"
+			name="b_num" value="<%=kbvo.getB_num()%>">
 	</form>
 
 	<%
 		}
 	%>
 	<br>
-		<div>댓글목록</div>
+	<div>댓글목록</div>
 	<table border="1" id="reply_table">
-	<tr> <td>작성자</td><td>댓글내용</td><td>작성일자</td>
-			</tr> 
-	<%
-		List reply_list = (List) request.getAttribute("reply_list");
-	if(reply_list !=null){
-		if (reply_list.size() > 0) { //댓글 목록 출력
+		<tr>
+			<td>작성자</td>
+			<td>댓글내용</td>
+			<td>작성일자</td>
+		</tr>
+		<%
+			List reply_list = (List) request.getAttribute("reply_list");
+		if (reply_list != null) {
+			if (reply_list.size() > 0) { //댓글 목록 출력
 		%>
-			
-			
-				<%
-					for (int i = 0; i < reply_list.size(); i++) {//출력된 댓글들 중 하나 클릭하면  대댓글 여부 체크하고 출력
-					CommentsVO commentsVO = (CommentsVO)reply_list.get(i);
-					String b_num = commentsVO.getB_num();
-					String c_num = commentsVO.getC_c_num();
-				%>
-				<tr onclick="reply_re_form(<%=i%>)">
-					<td><%=commentsVO.getM_num()%></td> <td ><%=commentsVO.getC_content()%></td><td><%=commentsVO.getC_reg_date()%></td> 
-				</tr>
-				<tr>
-				<td hidden="true" id="hidden_td<%=i%>"> 
-				<form id="reply_re_form_tag<%=i%>" name="reply_re_form_tag<%=i%>" action="/board/reply_re_insert">
-				<input type="hidden" name="m_num"  value="<%=m_num%>"> <!-- 현재 로그인한 세션의 회원번호 -->
-				<input type="hidden" name="b_num" value="<%=b_num%>">
-				<input type="hidden" name="c_num" value="<%=c_num%>">
-				<input type="hidden" name="c_content" id="c_content">
-				<input type="hidden" name="submit" id="submit" value="등록하기">
-				</form>
-				</td>
-				</tr>
-<%
-					}
-		}
-	}
-	
-%>
 
-</table>
+
+		<%
+			for (int i = 0; i < reply_list.size(); i++) {//출력된 댓글들 중 하나 클릭하면  대댓글 여부 체크하고 출력
+			CommentsVO commentsVO = (CommentsVO) reply_list.get(i);
+			String b_num = commentsVO.getB_num();
+			String c_num = commentsVO.getC_c_num();
+		%>
+		<tr onclick="reply_re_form(<%=i%>)">
+			<td><%=commentsVO.getM_num()%></td>
+			<td><%=commentsVO.getC_content()%></td>
+			<td><%=commentsVO.getC_reg_date()%></td>
+		</tr>
+		<tr>
+			<td hidden="true" id="hidden_td<%=i%>">
+				<form id="reply_re_form_tag<%=i%>" name="reply_re_form_tag<%=i%>"
+					action="/board/reply_re_insert">
+					<input type="hidden" name="m_num" value="<%=m_num%>">
+					<!-- 현재 로그인한 세션의 회원번호 -->
+					<input type="hidden" name="b_num" value="<%=b_num%>"> <input
+						type="hidden" name="c_num" value="<%=c_num%>"> <input
+						type="hidden" name="c_content" id="c_content"> <input
+						type="hidden" name="submit" id="submit" value="등록하기">
+				</form>
+			</td>
+		</tr>
+		<%
+			}
+		}
+		}
+		%>
+
+	</table>
 	제목표시하기-제목을 눌렀을 때 대댓글이 있다면 아래에 늘어나서 표시되게 한다.
 </body>
 </html>
