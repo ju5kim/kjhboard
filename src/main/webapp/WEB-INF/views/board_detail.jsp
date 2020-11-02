@@ -51,13 +51,14 @@
 	*/
 	
 	function reply_re_form(i){
-	/*	var reply_re_form_tag = document.getElementById('reply_re_form_tag'+i);
+	/* 여기는 다 에러 나는 구문이다.
+	var reply_re_form_tag = document.getElementById('reply_re_form_tag'+i);
 		var c_content = reply_re_form_tag.getElementById('c_content');
 		var submit = reply_re_form_tag.getElementById('submit');
 		c_content.setAttribute("type","text");
 		submit.setAttribute("type","submit");
 		 에러 reply_re_form_tag.getElementById is not a function
-	*/	
+		
 	
 		//var reply_re_form_tag = document.getElementById('reply_re_form_tag'+i);
 		//reply_re_form_tag.c_content.type  = "text";  에러 c_content가 Cannot read property 'c_content' of undefined
@@ -71,16 +72,38 @@
 		//c_content.setAttribute("type","text");
 		
 		//submit.setAttribute("type","submit");
-		//위에는 다 에러
-			alert(">>>>>");
-		var hidden_td = document.getElementById('hidden_td'+i);
+*/
+		//html 태그의 click_count 값을 주고 그 값을 가지고 와서
+		//계산하고 태그에 다시 값을 셋팅 했다.
+		alert(" 자바 스크립트 처음 실행 시 click_count ::: " +click_count);
+		var input = document.forms['reply_re_form_tag'+i].elements['click_count'];
+		var click_count = input.getAttribute("value");
+		alert(" 태그에서 getAttribute 한 click_count ::: " +click_count);
+		
+		if(click_count % 2 > 0 ){
+			alert("클릭 카운트가 음수인 경우 ::: ");
+			var hidden_td = document.getElementById('hidden_td'+i);
 			hidden_td.removeAttribute("hidden");
-			alert(c_content);
-		var input = document.forms['reply_re_form_tag'+i].elements['c_content'];
-		input.setAttribute("type","text");
-		var submit = document.forms['reply_re_form_tag'+i].elements['submit'];
-		submit.setAttribute("type","submit");
-	
+			
+			var input = document.forms['reply_re_form_tag'+i].elements['c_content'];
+			input.setAttribute("type","text");
+			var submit = document.forms['reply_re_form_tag'+i].elements['submit'];
+			submit.setAttribute("type","submit");
+		}else{
+			alert(">>>>>");
+			alert("클릭카운트가 양수 인 경우 :::");
+			var hidden_td = document.getElementById('hidden_td'+i);
+			hidden_td.setAttribute("hidden","true")
+			var input = document.forms['reply_re_form_tag'+i].elements['c_content'];
+			input.setAttribute("type","hidden");
+			var submit = document.forms['reply_re_form_tag'+i].elements['submit'];
+			submit.setAttribute("type","hidden");
+		}
+		click_count++;
+		var input = document.forms['reply_re_form_tag'+i].elements['click_count']
+		input.setAttribute("value",click_count); //해당 태그에 값을 ++ 했다.
+		alert("자바스크립트 종료 후 클릭 카운트  :::: "+click_count);
+		
 	
 	}
 </script>
@@ -193,6 +216,7 @@
 						type="hidden" name="c_num" value="<%=c_num%>"> <input
 						type="hidden" name="c_content" id="c_content"> <input
 						type="hidden" name="submit" id="submit" value="등록하기">
+						<input type="hidden" name="click_count" id="click_count" value="1">
 				</form>
 			</td>
 		</tr>
