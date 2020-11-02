@@ -5,8 +5,8 @@ import java.util.List;
 import com.kjh.board.vo.CommentsVO;
 
 public interface CommentDAO {
+	
 	public int reply_insert(CommentsVO commentsVO);
-
 	// 댓글 조회
 	public CommentsVO reply_select(CommentsVO commentsVO);
 	// 댓글 전체조회
@@ -18,10 +18,10 @@ public interface CommentDAO {
 	public String reply_delete(CommentsVO commentsVO);
 
 	// 대댓글 달기
-	public String reply_re_insert(CommentsVO commentsVO);
+	public int reply_re_insert(CommentsVO commentsVO);
 
 	// 대댓글 조회
-	public String reply_re_select(CommentsVO commentsVO);
+	public List reply_re_select_All(CommentsVO commentsVO);
 
 	// 대댓글 수정
 	public String reply_re_update(CommentsVO commentsVO);

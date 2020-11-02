@@ -82,20 +82,32 @@
 		
 		if(click_count % 2 > 0 ){
 			alert("클릭 카운트가 음수인 경우 ::: ");
-			var hidden_td = document.getElementById('hidden_td'+i);
-			hidden_td.removeAttribute("hidden");
+			var hidden_tr = document.getElementById('hidden_tr'+i);
+			hidden_tr.removeAttribute("hidden");
+			var hidden_reply_re_list = document.getElementById('hidden_reply_re_list'+i);
+			hidden_reply_re_list.removeAttribute("hidden");
+			
+			
 			
 			var input = document.forms['reply_re_form_tag'+i].elements['c_content'];
 			input.setAttribute("type","text");
+			var input2 = document.forms['reply_re_form_tag'+i].elements['m_num'];
+			input2.setAttribute("type","text");
 			var submit = document.forms['reply_re_form_tag'+i].elements['submit'];
 			submit.setAttribute("type","submit");
+			
 		}else{
 			alert(">>>>>");
 			alert("클릭카운트가 양수 인 경우 :::");
-			var hidden_td = document.getElementById('hidden_td'+i);
-			hidden_td.setAttribute("hidden","true")
+			var hidden_tr = document.getElementById('hidden_tr'+i);
+			hidden_tr.setAttribute("hidden","true");
+			var hidden_reply_re_list = document.getElementById('hidden_reply_re_list'+i);
+			hidden_reply_re_list.setAttribute("hidden","true");
+			
 			var input = document.forms['reply_re_form_tag'+i].elements['c_content'];
 			input.setAttribute("type","hidden");
+			var input2 = document.forms['reply_re_form_tag'+i].elements['m_num'];
+			input2.setAttribute("type","hidden");
 			var submit = document.forms['reply_re_form_tag'+i].elements['submit'];
 			submit.setAttribute("type","hidden");
 		}
@@ -106,6 +118,11 @@
 		
 	
 	}
+</script>
+<script type="text/javascript">
+function board_list_btn(){ // 글 목록 이동 
+	location.href="/board/board_list";
+}
 </script>
 
 </head>
@@ -162,7 +179,7 @@
 		</tr>
 	</table>
 	<button>수정하기</button>
-	<button>글 목록으로 이동하기</button>
+	<button onclick="board_list_btn()">글 목록으로 이동하기</button>
 	<br>
 	<h3>댓글 쓰기</h3>
 	<%
@@ -184,9 +201,9 @@
 	<div>댓글목록</div>
 	<table border="1" id="reply_table">
 		<tr>
-			<td>작성자</td>
-			<td>댓글내용</td>
-			<td>작성일자</td>
+			<td align="center">작성자</td>
+			<td align="center">댓글내용</td>
+			<td align="center">작성일자</td>
 		</tr>
 		<%
 			List reply_list = (List) request.getAttribute("reply_list");
@@ -199,30 +216,51 @@
 			for (int i = 0; i < reply_list.size(); i++) {//출력된 댓글들 중 하나 클릭하면  대댓글 여부 체크하고 출력
 			CommentsVO commentsVO = (CommentsVO) reply_list.get(i);
 			String b_num = commentsVO.getB_num();
-			String c_num = commentsVO.getC_c_num();
+			String c_num = commentsVO.getC_num();
+			String c_c_num = commentsVO.getC_c_num();
 		%>
 		<tr onclick="reply_re_form(<%=i%>)">
 			<td><%=commentsVO.getM_num()%></td>
 			<td><%=commentsVO.getC_content()%></td>
 			<td><%=commentsVO.getC_reg_date()%></td>
 		</tr>
-		<tr>
-			<td hidden="true" id="hidden_td<%=i%>">
+		<tr hidden="true" id="hidden_tr<%=i%>">
+			<td  colspan="3">
 				<form id="reply_re_form_tag<%=i%>" name="reply_re_form_tag<%=i%>"
 					action="/board/reply_re_insert">
-					<input type="hidden" name="m_num" value="<%=m_num%>">
+					<input type="hidden" name="m_num" value="<%=m_num%>" readonly="readonly">
 					<!-- 현재 로그인한 세션의 회원번호 -->
-					<input type="hidden" name="b_num" value="<%=b_num%>"> <input
-						type="hidden" name="c_num" value="<%=c_num%>"> <input
-						type="hidden" name="c_content" id="c_content"> <input
-						type="hidden" name="submit" id="submit" value="등록하기">
-						<input type="hidden" name="click_count" id="click_count" value="1">
+					<input type="hidden" name="b_num" value="<%=b_num%>">
+					<input type="hidden" name="c_num" value="<%=c_num%>">
+					
+					<input type="hidden" name="c_content" id="c_content">
+					<input type="hidden" name="submit" id="submit" value="등록하기">
+					<input type="hidden" name="click_count" id="click_count" value="1">
 				</form>
 			</td>
 		</tr>
+		<tr  id="hidden_reply_re_list<%=i%>" hidden="hidden">
+		<td></td>
+			<td colspan="2"><table>
+			<tr>작성자<td>내용<td></tr> 
+			<% 
+			List reply_re_list =(List)request.getAttribute("reply_re_list");
+			List inner_list = (List)reply_re_list.get(i);
+			for(int j=0; j < inner_list.size(); j++){
+			CommentsVO commentsVO3 = (CommentsVO)inner_list.get(j);
+			%>
+			<tr><td><%=commentsVO3.getM_num()%></td><td><%=commentsVO3.getC_content()%> </td> </tr> 	
+			<%
+			}
+			%> 
+			<!--여기서 jsp for문 돌려서 조회한 값 보이게 하기  -->
+			
+			</table>  </td>
+		</tr>
+	
 		<%
 			}
-		}
+			}
 		}
 		%>
 

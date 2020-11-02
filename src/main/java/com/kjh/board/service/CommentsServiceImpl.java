@@ -45,15 +45,15 @@ public class CommentsServiceImpl implements CommentService {
 	}
 
 	@Override
-	public String reply_re_insert(CommentsVO commentsVO) {
-		// TODO Auto-generated method stub
-		return null;
+	public CommentsVO reply_re_insert(CommentsVO commentsVO) {
+		int result = commentDAO.reply_re_insert(commentsVO);
+		return commentsVO;
 	}
 
 	@Override
-	public String reply_re_select(CommentsVO commentsVO) {
-		// TODO Auto-generated method stub
-		return null;
+	public List reply_re_select_All(CommentsVO commentsVO) {
+		List reply_re_list=commentDAO.reply_re_select_All(commentsVO);
+		return reply_re_list;
 	}
 
 	@Override

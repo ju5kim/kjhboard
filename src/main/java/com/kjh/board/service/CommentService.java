@@ -17,10 +17,10 @@ public interface CommentService {
 	public String reply_delete(CommentsVO commentsVO);
 
 	// 대댓글 달기
-	public String reply_re_insert(CommentsVO commentsVO);
+	public CommentsVO reply_re_insert(CommentsVO commentsVO);
 
 	// 대댓글 조회
-	public String reply_re_select(CommentsVO commentsVO);
+	public List reply_re_select_All(CommentsVO commentsVO);
 
 	// 대댓글 수정
 	public String reply_re_update(CommentsVO commentsVO);

@@ -40,7 +40,8 @@
 	</select>
 	<select id="reply_select_all" parameterType="String" resultType="commentsVO">
 		<![CDATA[ 
-		select * from comments where b_num = #{b_num} order by c_num desc
+		select * from comments 
+		where b_num = #{b_num} and c_c_num = 0 order by c_num desc
 		]]>
 	</select>
 
@@ -59,6 +60,43 @@
 		where c_num = #{c_num} 
 			]]>
 	</delete>
-
+	
+	<insert id="reply_re_insert" parameterType="commentsVO">
+	<![CDATA[ 
+		insert into comments
+		(
+		c_num,
+		c_c_num,
+		m_num,
+		c_content,
+		c_reg_date,
+		b_num
+		)
+		values
+		(
+		#{c_num},
+		seq_comments_re.nextval,
+		#{m_num},
+		#{c_content},
+		sysdate,
+		#{b_num}
+		)
+	]]>
+	<!-- 
+		<selectKey order="AFTER" keyProperty="c_num"
+			resultType="String">
+		<![CDATA[ 
+		select seq_comments.currval from dual
+		]]>
+		</selectKey>
+	 -->	
+	</insert>
+	<select id="reply_re_select_All" resultType="commentsVO">
+	
+		<![CDATA[ 
+		select * from comments
+		where b_num = #{b_num} and c_num = #{c_num} and c_c_num > 0 order by c_c_num desc
+		]]>
+	</select>	
 
 </mapper>
