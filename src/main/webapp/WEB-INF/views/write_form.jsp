@@ -39,6 +39,10 @@
 			</tr>
 			<tr>
 				<td><input type="file" id="b_images" name="b_images"
+					value="첨부파일" multiple="multiple"></td>
+			</tr>
+			<tr>
+				<td><input type="file" id="b_images2" name="b_images2"
 					value="첨부파일"></td>
 			</tr>
 		</table>

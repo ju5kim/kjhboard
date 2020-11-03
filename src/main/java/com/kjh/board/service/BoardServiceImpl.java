@@ -167,8 +167,6 @@ public class BoardServiceImpl implements BoardService {
 		kbvo.setB_subject((String) map.get("b_subject"));
 		kbvo.setB_content((String) map.get("b_content"));
 		kbvo.setM_num((String) map.get("m_num"));
-		Iterator iterator = multipartRequest.getFileNames();
-
 		return kbvo;
 	}
 
@@ -176,17 +174,25 @@ public class BoardServiceImpl implements BoardService {
 	@Override
 	public List<ImageVO> imagevo_setting(MultipartHttpServletRequest multipartRequest, String b_num)
 			throws IllegalStateException, IOException {
-		List<ImageVO> list = new ArrayList<ImageVO>();
+		List<ImageVO> imageVO_list = new ArrayList<ImageVO>();
 		ImageVO imagevo = new ImageVO();
 
 		Iterator iterator = multipartRequest.getFileNames();
 		while (iterator.hasNext()) {
 			String file_name = (String) iterator.next();
-			MultipartFile multipartfile = multipartRequest.getFile(file_name);
-			String real_file_name = multipartfile.getOriginalFilename();
-			imagevo.setImage_file_name(real_file_name); // vo에 담는것
-			imagevo.setB_num(b_num);
-			list.add(imagevo);// 이게 지금 반복문 밖에서 imagevo객체가있는데 list에 imagevo객체가 차례대로 제대로 담길려나?
+			log.info("imagevo_setting 메서드 파일 이름 출력하기 :::: "+file_name);
+			List<MultipartFile> mulpart_file_list = multipartRequest.getFiles(file_name);
+			for(MultipartFile multipartfile : mulpart_file_list) {
+				String real_file_name = multipartfile.getOriginalFilename();
+				imagevo.setImage_file_name(real_file_name); // vo에 담는것
+				log.info("real_file_name :::" +real_file_name);
+				imagevo.setB_num(b_num);
+				imageVO_list.add(imagevo);
+			}
+//			String real_file_name = multipartfile.getOriginalFilename();
+//			imagevo.setImage_file_name(real_file_name); // vo에 담는것
+//			imagevo.setB_num(b_num);
+//			list.add(imagevo);// 이게 지금 반복문 밖에서 imagevo객체가있는데 list에 imagevo객체가 차례대로 제대로 담길려나?? 정답은 담긴다.
 
 //			File file_temp = new File(save_path_front + "temp\\" + real_file_name);
 //			File file_real = new File(save_path_front+"글번호\\"+real_file_name);
@@ -200,10 +206,8 @@ public class BoardServiceImpl implements BoardService {
 //				}
 //				file_temp.delete(); //업로드가 되었건 안되었건 임시저장소 파일은 삭제 해야한다.
 //			}
-
 		}
-
-		return list;
+		return imageVO_list; // realFileName을 셋팅해서 값을 넘긴다.
 	}
 	@Override
 	public List<ImageVO> select_image(String b_num) {
@@ -214,9 +218,14 @@ public class BoardServiceImpl implements BoardService {
 
 	@Override
 	public List<ImageVO> image_insert(List<ImageVO> list, MultipartHttpServletRequest multipartHttpServletRequest) {
+	
 		for (int i = 0; i < list.size(); i++) {
 			ImageVO imagevo = (ImageVO) list.get(i);
+			log.info("이미지 b_num :::"+imagevo.getB_num());
+			log.info("이미지 파일 네임 :::"+imagevo.getImage_file_name());
+			log.info("인서트가 실행되기 전");
 			int result = boardDAO.image_insert(imagevo);
+			
 			if (result > 0) {
 				file_upload(imagevo, multipartHttpServletRequest);
 
@@ -248,6 +257,24 @@ public class BoardServiceImpl implements BoardService {
 			} //
 
 		}
+	}
+	
+	@Override
+	public ImageVO image_update(List imagevo_list) {
+		for(int i =0; i<imagevo_list.size(); i++) {
+			ImageVO imageVO=(ImageVO)imagevo_list.get(i);
+			int result=boardDAO.image_update(imageVO);
+			List result_list= new ArrayList();
+			if(result>0) {
+				result_list.add(result);
+			}else {
+				log.info("DB에 입력 실패");
+			}
+		}
+	//이미지 vo가 업데이트하고나서 return 으로 이미지 vo에 이미지 번호를 받도록해서 
+	//이미지 번호로 다른 로직들(조회하기)를 처리하도록 하는게 좋을 것 같다.
+	//
+	return null;
 	}
 
 	@Override
@@ -284,8 +311,9 @@ public class BoardServiceImpl implements BoardService {
 
 	@Override
 	public int board_update(KjhBoardVO kbvo) {
-		// TODO Auto-generated method stub
-		return 0;
+			int result=boardDAO.board_update(kbvo);
+			
+		return result;
 	}
 
 	@Override

@@ -69,12 +69,19 @@ public class BoardDAOImpl implements BoardDAO {
 		log.info(imagevo.getReg_date());
 		return result;
 	}
-
+	@Override
+	public int image_update(ImageVO imagevo) {
+		int result=sqlsession.update("mapper.board.",imagevo);
+		return result;
+		
+	}
+	
 	@Override
 	public int board_update(KjhBoardVO kbvo) {
-		// TODO Auto-generated method stub
-		return 0;
+		int result= sqlsession.update("mapper.board.board_update",kbvo);
+		return result;
 	}
+	
 
 	@Override
 	public int board_delete(KjhBoardVO kbvo) {

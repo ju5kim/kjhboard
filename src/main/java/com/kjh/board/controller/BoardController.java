@@ -192,16 +192,17 @@ public class BoardController {
 		String m_num = (String) session.getAttribute("m_num");
 		KjhBoardVO kbvo;
 		ImageVO imagevo;
-		List imagevo_list = new ArrayList();
+		List imageVO_list = new ArrayList();
 		kbvo = boardservice.kbvo_setting(multipartRequest);
 		kbvo = boardservice.board_insert_select(kbvo);// 처음에 인서트하고 해당 글번호로 조회한 값을 조회해서 kbvo에 담아서 리턴한다.
 		String b_num = kbvo.getB_num();
-		imagevo_list = boardservice.imagevo_setting(multipartRequest, b_num);
-		imagevo_list = boardservice.image_insert(imagevo_list, multipartRequest);
+		imageVO_list = boardservice.imagevo_setting(multipartRequest, b_num);
+		
+		imageVO_list = boardservice.image_insert(imageVO_list, multipartRequest);
 
 		multipartRequest.setAttribute("kbvo", kbvo);
-		multipartRequest.setAttribute("imagevo_list", imagevo_list);
-		return "forward:/board_detail"; // 컨트롤러를 걸치지 않고 글 상세 페이지로 바로 이동??
+		multipartRequest.setAttribute("imagevo_list", imageVO_list);
+		return "forward:/board_detail"; // 컨트롤러로 이동 
 	}
 
 	// 글을 클릭했을때 상세페이지로 이동
@@ -264,11 +265,29 @@ public class BoardController {
 
 	}
 
-	// 글 수정 시 이동
-	// @RequestMapping
-	public String write_update() {
-
-		return null;
+	// 글 수정 페이지로 이동
+	@RequestMapping(value = "/board_update_form")
+	public String board_update_form(HttpServletRequest request, String b_num) {
+		log.info("board_update_form 컨트롤러 실행 ::: 화면이동만 ");
+		KjhBoardVO kbvo = new KjhBoardVO();
+		kbvo.setB_num(b_num);
+		kbvo=boardservice.board_select_one(kbvo);
+		List<ImageVO> imagevo_list=boardservice.select_image(b_num);
+		request.setAttribute("kbvo", kbvo);
+		request.setAttribute("imagevo_list", imagevo_list);
+		return "board_update_form";
+	}
+	//문제 발생
+	//
+	@RequestMapping(value = "/board_update")
+	public String board_update(MultipartHttpServletRequest multipartRequest) throws IllegalStateException, IOException {
+		log.info("boar_update 컨트롤러 실행 :::::");
+		
+		KjhBoardVO kbvo=boardservice.kbvo_setting(multipartRequest);
+		boardservice.board_update(kbvo);
+		List imageVO_list=boardservice.imagevo_setting(multipartRequest, kbvo.getB_num());
+		
+		return "";
 	}
 
 	// 글 삭제

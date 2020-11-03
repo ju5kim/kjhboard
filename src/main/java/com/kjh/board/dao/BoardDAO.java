@@ -13,6 +13,7 @@ public interface BoardDAO {
 	public List<KjhBoardVO> board_select_list_page(PageVO pvo);
 	public int image_insert(ImageVO imagevo);
 	public List<ImageVO> image_select_list(String b_num);
+	public int image_update(ImageVO imagevo);
 	public int board_insert(KjhBoardVO kbvo);
 	public int board_update(KjhBoardVO kbvo);
 	public int board_delete(KjhBoardVO kbvo);

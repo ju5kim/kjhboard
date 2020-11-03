@@ -1,3 +1,4 @@
+<%@page import="java.io.OutputStream"%>
 <%@page import="com.kjh.board.vo.CommentsVO"%>
 <%@page import="java.awt.font.ImageGraphicAttribute"%>
 <%@page import="com.kjh.board.vo.ImageVO"%>
@@ -51,30 +52,7 @@
 	*/
 	
 	function reply_re_form(i){
-	/* 여기는 다 에러 나는 구문이다.
-	var reply_re_form_tag = document.getElementById('reply_re_form_tag'+i);
-		var c_content = reply_re_form_tag.getElementById('c_content');
-		var submit = reply_re_form_tag.getElementById('submit');
-		c_content.setAttribute("type","text");
-		submit.setAttribute("type","submit");
-		 에러 reply_re_form_tag.getElementById is not a function
-		
-	
-		//var reply_re_form_tag = document.getElementById('reply_re_form_tag'+i);
-		//reply_re_form_tag.c_content.type  = "text";  에러 c_content가 Cannot read property 'c_content' of undefined
-		//var c_content = document.reply_re_form_tag.getElementByName('c_content'); 에러 Cannot read property 'getElementByName' of undefined
-		//var c_content = reply_re_form_tag.getElementsByTagName("c_content");
-		//var submit = reply_re_form_tag.getElementsByTagName("submit");
-	
-//		c_content.type = "text";
-//		submit.type ="submit";
-		//var submit = reply_re_form_tag.submit;
-		//c_content.setAttribute("type","text");
-		
-		//submit.setAttribute("type","submit");
-*/
-		//html 태그의 click_count 값을 주고 그 값을 가지고 와서
-		//계산하고 태그에 다시 값을 셋팅 했다.
+
 		alert(" 자바 스크립트 처음 실행 시 click_count ::: " +click_count);
 		var input = document.forms['reply_re_form_tag'+i].elements['click_count'];
 		var click_count = input.getAttribute("value");
@@ -115,13 +93,16 @@
 		var input = document.forms['reply_re_form_tag'+i].elements['click_count']
 		input.setAttribute("value",click_count); //해당 태그에 값을 ++ 했다.
 		alert("자바스크립트 종료 후 클릭 카운트  :::: "+click_count);
-		
-	
 	}
 </script>
 <script type="text/javascript">
 function board_list_btn(){ // 글 목록 이동 
 	location.href="/board/board_list";
+}
+function board_update_btn(){
+	//location.href="/board/board_update";
+	this.board.action ="/board/board_update_form"
+	this.board.submit();
 }
 </script>
 
@@ -138,10 +119,11 @@ function board_list_btn(){ // 글 목록 이동
 	KjhBoardVO kbvo = (KjhBoardVO) request.getAttribute("kbvo");
 	List list = (List) request.getAttribute("imagevo_list");
 	%>
-	<table border="1">
+	<form name="board">
+	<table border="1" >
 		<tr>
 			<td>글번호</td>
-			<td><%=kbvo.getB_num()%></td>
+			<td><input id="b_num" name="b_num" value="<%=kbvo.getB_num()%>"></td>
 		</tr>
 		<tr>
 			<td>글제목</td>
@@ -160,7 +142,7 @@ function board_list_btn(){ // 글 목록 이동
 			%>
 			<td>
 				<div class="result-images">
-					<img alt="표시불가"
+					<img alt="표시불가" id="<%=image_file_name%>" name="<%=image_file_name%>"
 						src="${contextPath}/board/download?image_file_name=<%=image_file_name%>&b_num=<%=kbvo.getB_num()%>">
 				</div>
 			</td>
@@ -178,8 +160,11 @@ function board_list_btn(){ // 글 목록 이동
 			<td><%=kbvo.getB_reg_date()%></td>
 		</tr>
 	</table>
-	<button>수정하기</button>
-	<button onclick="board_list_btn()">글 목록으로 이동하기</button>
+
+	
+	<button onclick="board_update_btn()">글 수정 페이지로 이동</button>
+	</form>
+	<button onclick="board_list_btn()">글 목록으로 이동</button>
 	<br>
 	<h3>댓글 쓰기</h3>
 	<%
@@ -225,45 +210,54 @@ function board_list_btn(){ // 글 목록 이동
 			<td><%=commentsVO.getC_reg_date()%></td>
 		</tr>
 		<tr hidden="true" id="hidden_tr<%=i%>">
-			<td  colspan="3">
+			<td colspan="3">
 				<form id="reply_re_form_tag<%=i%>" name="reply_re_form_tag<%=i%>"
 					action="/board/reply_re_insert">
-					<input type="hidden" name="m_num" value="<%=m_num%>" readonly="readonly">
+					<input type="hidden" name="m_num" value="<%=m_num%>"
+						readonly="readonly">
 					<!-- 현재 로그인한 세션의 회원번호 -->
-					<input type="hidden" name="b_num" value="<%=b_num%>">
-					<input type="hidden" name="c_num" value="<%=c_num%>">
-					
-					<input type="hidden" name="c_content" id="c_content">
-					<input type="hidden" name="submit" id="submit" value="등록하기">
-					<input type="hidden" name="click_count" id="click_count" value="1">
+					<input type="hidden" name="b_num" value="<%=b_num%>"> <input
+						type="hidden" name="c_num" value="<%=c_num%>"> <input
+						type="hidden" name="c_content" id="c_content"> <input
+						type="hidden" name="submit" id="submit" value="등록하기"> <input
+						type="hidden" name="click_count" id="click_count" value="1">
 				</form>
 			</td>
 		</tr>
-		<tr  id="hidden_reply_re_list<%=i%>" hidden="hidden">
-		<td></td>
-			<td colspan="2"><table>
-			<tr>작성자<td>내용<td></tr> 
-			<% 
-			List reply_re_list =(List)request.getAttribute("reply_re_list");
-			List inner_list = (List)reply_re_list.get(i);
-			for(int j=0; j < inner_list.size(); j++){
-			CommentsVO commentsVO3 = (CommentsVO)inner_list.get(j);
-			%>
-			<tr><td><%=commentsVO3.getM_num()%></td><td><%=commentsVO3.getC_content()%> </td> </tr> 	
-			<%
-			}
-			%> 
-			<!--여기서 jsp for문 돌려서 조회한 값 보이게 하기  -->
-			
-			</table>  </td>
+		<tr id="hidden_reply_re_list<%=i%>" hidden="hidden">
+			<td></td>
+			<td colspan="3"><table border="1">
+					<tr>
+						<td align="center">작성자 </td>
+						<td align="center">내용 </td>
+						
+					</tr>
+					<%
+						List reply_re_list = (List) request.getAttribute("reply_re_list");
+					List inner_list = (List) reply_re_list.get(i);
+					for (int j = 0; j < inner_list.size(); j++) {
+						CommentsVO commentsVO3 = (CommentsVO) inner_list.get(j);
+					%>
+					<tr>
+						<td><%=commentsVO3.getM_num()%></td>
+						<td><%=commentsVO3.getC_content()%></td>
+					</tr>
+					<%
+						}
+					%>
+					<!--여기서 jsp for문 돌려서 조회한 값 보이게 하기  -->
+
+				</table></td>
 		</tr>
-	
+
 		<%
 			}
-			}
+		}
 		}
 		%>
-
+<% 
+	
+%>
 	</table>
 	제목표시하기-제목을 눌렀을 때 대댓글이 있다면 아래에 늘어나서 표시되게 한다.
 </body>
