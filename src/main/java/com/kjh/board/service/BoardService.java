@@ -22,7 +22,7 @@ public interface BoardService {
 	public int board_insert(KjhBoardVO kbvo);
 	public KjhBoardVO board_insert_select(KjhBoardVO kbvo);
 	public String board_insert_with_map(Map map);
-	public ImageVO image_update(List imagevo_list);
+	public List<ImageVO> image_update(List imagevo_list,MultipartHttpServletRequest multipartHttpServletRequest);
 	public int board_update(KjhBoardVO kbvo);
 	public int board_delete(KjhBoardVO kbvo);
 }

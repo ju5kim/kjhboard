@@ -71,7 +71,7 @@ public class BoardDAOImpl implements BoardDAO {
 	}
 	@Override
 	public int image_update(ImageVO imagevo) {
-		int result=sqlsession.update("mapper.board.",imagevo);
+		int result=sqlsession.update("mapper.board.image_update",imagevo);
 		return result;
 		
 	}

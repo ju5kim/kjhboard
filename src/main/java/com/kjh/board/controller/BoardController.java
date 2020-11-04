@@ -63,13 +63,13 @@ public class BoardController {
 	// 게시글 목록으로 가는 페이지
 	@RequestMapping(value = "/board_list")
 	public String boardlist(HttpServletRequest request, PageVO pvo) {
-		log.info("화면에서 넘어오는 값");
-		log.info("now_page :::" + pvo.getNow_page());
-		log.info("now_group :::" + pvo.getNow_group());
+//		log.info("화면에서 넘어오는 값");
+//		log.info("now_page :::" + pvo.getNow_page());
+//		log.info("now_group :::" + pvo.getNow_group());
 		List<KjhBoardVO> list = boardservice.board_select_list_page(pvo);
-		log.info("값 셋팅 실행 후");
-		log.info(pvo.getNow_page());
-		log.info(pvo.getNow_group());
+//		log.info("값 셋팅 실행 후");
+//		log.info(pvo.getNow_page());
+//		log.info(pvo.getNow_group());
 		request.setAttribute("list", list);
 		request.setAttribute("pvo", pvo);
 		return "board_list";
@@ -192,23 +192,29 @@ public class BoardController {
 		String m_num = (String) session.getAttribute("m_num");
 		KjhBoardVO kbvo;
 		ImageVO imagevo;
-		List imageVO_list = new ArrayList();
+
 		kbvo = boardservice.kbvo_setting(multipartRequest);
 		kbvo = boardservice.board_insert_select(kbvo);// 처음에 인서트하고 해당 글번호로 조회한 값을 조회해서 kbvo에 담아서 리턴한다.
 		String b_num = kbvo.getB_num();
+		List<ImageVO> imageVO_list = new ArrayList();
 		imageVO_list = boardservice.imagevo_setting(multipartRequest, b_num);
-		
+		for (ImageVO imageVO : imageVO_list) {
+			log.info("imagevo_setting 후imageVO_list에 있는 값들:::: ");
+			log.info(imageVO.getB_num());
+			log.info(imageVO.getImage_file_name());
+		}
+
 		imageVO_list = boardservice.image_insert(imageVO_list, multipartRequest);
 
 		multipartRequest.setAttribute("kbvo", kbvo);
 		multipartRequest.setAttribute("imagevo_list", imageVO_list);
-		return "forward:/board_detail"; // 컨트롤러로 이동 
+		return "forward:/board_detail"; // 컨트롤러로 이동
 	}
 
 	// 글을 클릭했을때 상세페이지로 이동
 	@RequestMapping(value = "/board_detail", method = { RequestMethod.POST, RequestMethod.GET })
 //	public String write_detail(KjhBoardVO kbvo, HttpServletRequest request) { // 매개변수를 vo를 받으면 get이 자꾸 작동해서 에러난거임
-	public String write_detail(HttpServletRequest request) {
+	public String write_detail(HttpServletRequest request)  throws Exception{
 		log.info("board_detail 컨트롤러 시작 :::");
 		KjhBoardVO kbvo = (KjhBoardVO) request.getAttribute("kbvo");// 글쓰기 완료 후 넘어온다.
 
@@ -219,14 +225,24 @@ public class BoardController {
 			kbvo.setB_num(b_num);
 			kbvo = boardservice.board_select_one(kbvo);
 			List<ImageVO> imagevo_list = boardservice.select_image(b_num);
+			// 0번 인덱스의 값으로 나머지 인덱스를 돌면서 값을 비교한다. 그런데 이것도 2중 for문으로 하면 뭔가 될거 같은데? 비교 알고리즘?
+			if(imagevo_list!=null&&imagevo_list.size()>0) {
+				String image_file_name = imagevo_list.get(0).getImage_file_name();
+				for (int i = 1; i < imagevo_list.size(); i++) {
+					String image_file_name2 = imagevo_list.get(i).getImage_file_name();
+					if (image_file_name.equals((image_file_name2))) {
+						imagevo_list.remove(i);
+					}
+				}
+			}
 			List<CommentsVO> reply_list = commentservice.reply_select_all(b_num);// 댓글 목록 모두 출력하기
 			List<List<CommentsVO>> reply_re_list = new ArrayList<List<CommentsVO>>();
-				for(int i =0; i<reply_list.size(); i++) {
-					CommentsVO commentsVO=(CommentsVO)reply_list.get(i);
-					List list=commentservice.reply_re_select_All(commentsVO);
-					reply_re_list.add(list);
-				}
-		
+			for (int i = 0; i < reply_list.size(); i++) {
+				CommentsVO commentsVO = (CommentsVO) reply_list.get(i);
+				List list = commentservice.reply_re_select_All(commentsVO);
+				reply_re_list.add(list);
+			}
+
 //대댓글을 조회 할려면 b_num과 c_num값이 있어야 한다.List reply_re_list=commentservice.reply_re_select_All(commentsVO);
 			request.setAttribute("reply_re_list", reply_re_list);
 			request.setAttribute("reply_list", reply_list);
@@ -241,6 +257,10 @@ public class BoardController {
 	@RequestMapping(value = "/download")
 	public void file_down_send(@RequestParam("image_file_name") String image_file_name,
 			@RequestParam("b_num") String b_num, HttpServletResponse response) throws IOException {
+		log.info("file_down_send 컨트롤러 실행 ::::");
+		log.info("이미지파일 b_num ::: " + b_num);
+		log.info("이미지파일 파일 네임 :::" + image_file_name);
+
 		OutputStream outputStream = response.getOutputStream();
 		File image_file = new File("c:\\spring\\" + b_num + "\\" + image_file_name);
 		if (image_file.exists()) {
@@ -262,7 +282,7 @@ public class BoardController {
 			fileInputStream.close();
 			outputStream.close();
 		}
-
+		log.info("file_down_send 컨트롤러 종료 ::::");
 	}
 
 	// 글 수정 페이지로 이동
@@ -271,23 +291,48 @@ public class BoardController {
 		log.info("board_update_form 컨트롤러 실행 ::: 화면이동만 ");
 		KjhBoardVO kbvo = new KjhBoardVO();
 		kbvo.setB_num(b_num);
-		kbvo=boardservice.board_select_one(kbvo);
-		List<ImageVO> imagevo_list=boardservice.select_image(b_num);
+		kbvo = boardservice.board_select_one(kbvo);
+		List<ImageVO> imagevo_list = boardservice.select_image(b_num);
+		String image_file_name = imagevo_list.get(0).getImage_file_name();
+		for (int i = 1; i < imagevo_list.size(); i++) {
+			String image_file_name2 = imagevo_list.get(i).getImage_file_name();
+			if(image_file_name.equals(image_file_name2)) {
+				imagevo_list.remove(i);
+			}
+		}
+
 		request.setAttribute("kbvo", kbvo);
 		request.setAttribute("imagevo_list", imagevo_list);
 		return "board_update_form";
 	}
-	//문제 발생
+
+	// 문제 발생
 	//
 	@RequestMapping(value = "/board_update")
-	public String board_update(MultipartHttpServletRequest multipartRequest) throws IllegalStateException, IOException {
+	public String board_update(MultipartHttpServletRequest multipartRequest, HttpSession session)
+			throws IllegalStateException, IOException {
 		log.info("boar_update 컨트롤러 실행 :::::");
-		
-		KjhBoardVO kbvo=boardservice.kbvo_setting(multipartRequest);
+		KjhBoardVO kbvo = boardservice.kbvo_setting(multipartRequest);
 		boardservice.board_update(kbvo);
-		List imageVO_list=boardservice.imagevo_setting(multipartRequest, kbvo.getB_num());
-		
-		return "";
+		kbvo = boardservice.board_select_one(kbvo);
+
+		List imageVO_list = boardservice.imagevo_setting(multipartRequest, kbvo.getB_num());
+		// 여기서는 글번호와 파일 이름이 imageVO에 셋팅되어 list에 담긴다.
+		ImageVO imageVO = (ImageVO) imageVO_list.get(0);
+		imageVO = (ImageVO) imageVO_list.get(0);
+		log.info("board_update 실행시 " + imageVO.getB_num());
+		log.info("board_update 실행시 " + imageVO.getImage_file_name());
+
+		imageVO_list = boardservice.image_update(imageVO_list, multipartRequest);
+		boardservice.select_image(kbvo.getB_num());
+		imageVO = (ImageVO) imageVO_list.get(0);
+		log.info("board_update 실행시 " + imageVO.getB_num());
+		log.info("board_update 실행시 " + imageVO.getImage_file_name());
+		// 이미지 테이블에 업데이트하고 파일업로드까지 완료
+		multipartRequest.setAttribute("kbvo", kbvo);
+		multipartRequest.setAttribute("imagevo_list", imageVO_list);
+		log.info("boar_update 컨트롤러 종료 :::::");
+		return "board_update_form";
 	}
 
 	// 글 삭제
@@ -376,10 +421,9 @@ public class BoardController {
 	// 대댓글 조회
 
 	public String reply_re_select_All(CommentsVO commentsVO) {
-		//받아야하는게 b_num 과 c_num이다. 
+		// 받아야하는게 b_num 과 c_num이다.
 		List reply_re_list = commentservice.reply_re_select_All(commentsVO);
-		
-		
+
 		return "board_detail";
 	}
 

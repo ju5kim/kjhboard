@@ -105,9 +105,10 @@
 	<![CDATA[
 	 update kjhboard
 	 set 
-	 (b_subject = #{b_subject},
+	 b_subject = #{b_subject},
 	 b_content = #{b_content},
-	 b_update_date = sysdate)
+	 b_update_date = sysdate
+	 
 	 where b_num = #{b_num}
 	 
 	]]>
@@ -116,11 +117,9 @@
 		<![CDATA[
 	 update image
 	 set
-	 (
+	 image_file_name = #{image_file_name},
+	 reg_date = sysdate
 	 
-		image_file_name = #{image_file_name},
-		reg_date = sysdate,
-	 )
 	 where b_num = #{b_num}  
 	]]>
 <!-- 	<selectKey order="AFTER" keyProperty="image_num" resultType="String">

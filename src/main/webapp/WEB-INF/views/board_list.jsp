@@ -51,7 +51,7 @@ function go_board_detail(i) {
  
 맨위에 로그인 버튼이 있다. 로그인 버튼과 로그인 하면 js미니 게임이 있다.
 -->
-	<h1>게시판 목록</h1>
+	<h1 align="center">게시판 목록</h1>
 
 	<button>js미니 게임</button>
 
@@ -75,7 +75,7 @@ function go_board_detail(i) {
 
 	<form id="list_form" name="list_form">
 		<table id="boardlist" border="1">
-			<thead>
+			<thead align="center">
 				<tr>
 					<td>글번호</td>
 					<td>제목(댓글수)</td>

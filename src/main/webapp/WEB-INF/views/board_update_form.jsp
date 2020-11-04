@@ -16,6 +16,7 @@ function board_list_btn(){ // 글 목록 이동
 function board_update_btn(){
 	//location.href="/board/board_update";
 	this.board.action ="/board/board_update"
+	this.enctype="multipart/form-data";
 	this.board.submit();
 }
 </script>
@@ -27,7 +28,7 @@ function board_update_btn(){
 	KjhBoardVO kbvo = (KjhBoardVO) request.getAttribute("kbvo");
 	List list = (List) request.getAttribute("imagevo_list");
 	%>
-	<form name="board" enctype="multipart/form-data">
+	<form name="board" enctype="multipart/form-data" method="post">
 	<table border="1" >
 		<tr>
 			<td>글번호</td>

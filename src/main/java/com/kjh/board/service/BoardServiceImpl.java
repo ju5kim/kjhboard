@@ -164,9 +164,10 @@ public class BoardServiceImpl implements BoardService {
 			String value = multipartRequest.getParameter(name);
 			map.put(name, value);
 		}
+		kbvo.setM_num((String) map.get("m_num"));
+		kbvo.setB_num((String)map.get("b_num"));
 		kbvo.setB_subject((String) map.get("b_subject"));
 		kbvo.setB_content((String) map.get("b_content"));
-		kbvo.setM_num((String) map.get("m_num"));
 		return kbvo;
 	}
 
@@ -175,14 +176,15 @@ public class BoardServiceImpl implements BoardService {
 	public List<ImageVO> imagevo_setting(MultipartHttpServletRequest multipartRequest, String b_num)
 			throws IllegalStateException, IOException {
 		List<ImageVO> imageVO_list = new ArrayList<ImageVO>();
-		ImageVO imagevo = new ImageVO();
-
+//		ImageVO imagevo = new ImageVO();
+		
 		Iterator iterator = multipartRequest.getFileNames();
 		while (iterator.hasNext()) {
 			String file_name = (String) iterator.next();
 			log.info("imagevo_setting 메서드 파일 이름 출력하기 :::: "+file_name);
 			List<MultipartFile> mulpart_file_list = multipartRequest.getFiles(file_name);
 			for(MultipartFile multipartfile : mulpart_file_list) {
+				ImageVO imagevo = new ImageVO();
 				String real_file_name = multipartfile.getOriginalFilename();
 				imagevo.setImage_file_name(real_file_name); // vo에 담는것
 				log.info("real_file_name :::" +real_file_name);
@@ -260,21 +262,26 @@ public class BoardServiceImpl implements BoardService {
 	}
 	
 	@Override
-	public ImageVO image_update(List imagevo_list) {
+	public List<ImageVO> image_update(List imagevo_list, MultipartHttpServletRequest multipartHttpServletRequest) {
+		
 		for(int i =0; i<imagevo_list.size(); i++) {
 			ImageVO imageVO=(ImageVO)imagevo_list.get(i);
-			int result=boardDAO.image_update(imageVO);
-			List result_list= new ArrayList();
-			if(result>0) {
-				result_list.add(result);
+			if(imageVO.getImage_file_name()!=null&&imageVO.getImage_file_name()!=""&&imageVO.getImage_file_name().length()>0) {
+				log.info("::::::::::::::::::::::::::::::"+imageVO.getImage_file_name());
+				int result=boardDAO.image_update(imageVO);
+				if(result>0) {
+					file_upload(imageVO,multipartHttpServletRequest);
+					log.info("파일 업로드 실행 :::::: ");
+				}else {
+					log.info("DB에 입력 실패");
+				}
 			}else {
-				log.info("DB에 입력 실패");
+				imagevo_list.remove(i);
 			}
 		}
-	//이미지 vo가 업데이트하고나서 return 으로 이미지 vo에 이미지 번호를 받도록해서 
-	//이미지 번호로 다른 로직들(조회하기)를 처리하도록 하는게 좋을 것 같다.
-	//
-	return null;
+		int size= imagevo_list.size();
+		log.info(size+"");
+	return imagevo_list;
 	}
 
 	@Override
