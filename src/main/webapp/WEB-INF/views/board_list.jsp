@@ -35,6 +35,21 @@ function go_board_detail(i) {
 */	
 	
 </script>
+<script type="text/javascript">
+	function click_tr(i){
+	var form = document.createElement('form');
+	var input = document.createElement('input');
+	var b_num = document.getElementById('b_num'+i).innerText;
+	alert("b_num 값은 ::: "+b_num);
+	input.setAttribute("name","b_num");
+	input.setAttribute("value", b_num);
+	form.appendChild(input);
+	document.body.appendChild(form);
+	form.setAttribute("method","get");
+	form.setAttribute("action","/board/board_detail");
+	form.submit();
+}
+</script>
 </head>
 <body>
 	<%
@@ -94,19 +109,19 @@ function go_board_detail(i) {
 					KjhBoardVO kbvo = list.get(i);
 				%>
 
-				<tr id="board">
+				<tr id="board<%=i%>" onclick="click_tr(<%=i%>)">
 					
-					<td><a href="/board/board_detail?b_num=<%=kbvo.getB_num()%>"><%=kbvo.getB_num()%></a></td>
+					<td id="b_num<%=i%>"><%=kbvo.getB_num()%></td>
 					<td><input id="b_subject" name="b_subject"
-						value="<%=kbvo.getB_subject()%>"></td>
+						value="<%=kbvo.getB_subject()%>" readonly="readonly"></td>
 					<td><input id="b_reg_date" name="b_reg_date"
-						value="<%=kbvo.getB_reg_date()%>"></td>
+						value="<%=kbvo.getB_reg_date()%>"readonly="readonly"></td>
 					<td><input id="b_update_date" name="b_update_date"
-						value="<%=kbvo.getB_update_date()%>"></td>
+						value="<%=kbvo.getB_update_date()%>"readonly="readonly"></td>
 					<td><input id="m_num" name="m_num"
-						value="<%=kbvo.getM_num()%>"></td>
+						value="<%=kbvo.getM_num()%>"readonly="readonly"></td>
 					<td><input id="b_counts" name="b_counts"
-						value="<%=kbvo.getB_counts()%>"></td>
+						value="<%=kbvo.getB_counts()%>"readonly="readonly"></td>
 				</tr>
 				<%
 					}

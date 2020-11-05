@@ -18,9 +18,9 @@
 	/*function reply_re_form(i){
 		
 	var reply_table = document.getElementById('reply_table');
-	var reply_re_tr = document.getElementById('reply_re'+i); // tr태그
+	var reply_re_tr = document.getElementById('reply_re'+i); // tr태그선택
 
-	var reply_re_tr_td0 = document.createElement('td0');
+	var reply_re_tr_td0 = document.createElement('td');
 	reply_re_tr.appendChild(reply_re_tr_td0);
 	var reply_re_tr_td = document.createElement('td');
 	reply_re_tr.appendChild(reply_re_tr_td);
@@ -123,7 +123,7 @@ function board_update_btn(){
 	<table border="1" >
 		<tr>
 			<td>글번호</td>
-			<td><input id="b_num" name="b_num" value="<%=kbvo.getB_num()%>"></td>
+			<td><input id="b_num" name="b_num" value="<%=kbvo.getB_num()%>" readonly="readonly"></td>
 		</tr>
 		<tr>
 			<td>글제목</td>
@@ -259,6 +259,5 @@ function board_update_btn(){
 	
 %>
 	</table>
-	제목표시하기-제목을 눌렀을 때 대댓글이 있다면 아래에 늘어나서 표시되게 한다.
 </body>
 </html>

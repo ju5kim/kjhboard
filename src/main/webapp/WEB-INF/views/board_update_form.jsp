@@ -20,6 +20,17 @@ function board_update_btn(){
 	this.board.submit();
 }
 </script>
+<script type="text/javascript">
+function add_btn(){
+	var count=0;
+	var input = document.createElement('input');
+	input.setAttribute("type","file");
+	input.setAttribute("name","b_images"+count);
+	input.setAttribute("value","파일업로드");
+	var div = document.getElementById("div_file");
+	div.appendChild(input);
+}
+</script>
 </head>
 <body>
 
@@ -54,12 +65,22 @@ function board_update_btn(){
 					<img alt="표시불가"
 						src="${contextPath}/board/download?image_file_name=<%=image_file_name%>&b_num=<%=kbvo.getB_num()%>">
 				</div>
-				<input id="image" name="image" type="file" multiple="multiple" value="파일 업로드">
+				<input type="button" value="첨부파일추가하기" onclick="add_btn()">
+				
+				<input id="image" name="image" type="file" value="파일 업로드">
+				
 			</td>
+		
+		
 
 			<%
 				}
 			%>
+		</tr>
+		<tr>
+		<td></td>
+		<td><div id="div_file"> </div>
+		</td>
 		</tr>
 		<tr>
 			<td>작성자</td>
