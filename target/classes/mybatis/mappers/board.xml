@@ -122,12 +122,11 @@
 	 
 	 where b_num = #{b_num}  
 	]]>
-<!-- 	<selectKey order="AFTER" keyProperty="image_num" resultType="String">
-	<![CDATA[ 
-	 select image_num form image where b_num = #{b_num}
-	]]>
-	</selectKey>
- -->	 
 	</update>
-
+	<delete id="board_delete" parameterType="kjhboardVO">
+	<![CDATA[
+	delete from kjhboard
+	where b_num = #{b_num}
+	]]>
+	</delete>
 </mapper>

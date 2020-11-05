@@ -325,7 +325,7 @@ public class BoardServiceImpl implements BoardService {
 
 	@Override
 	public int board_delete(KjhBoardVO kbvo) {
-		// TODO Auto-generated method stub
+		 boardDAO.board_delete(kbvo);
 		return 0;
 	}
 

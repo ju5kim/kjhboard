@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import com.kjh.board.HomeController;
 import com.kjh.board.vo.ImageVO;
 import com.kjh.board.vo.KjhBoardVO;
 import com.kjh.board.vo.PageVO;
@@ -69,29 +68,29 @@ public class BoardDAOImpl implements BoardDAO {
 		log.info(imagevo.getReg_date());
 		return result;
 	}
+
 	@Override
 	public int image_update(ImageVO imagevo) {
-		int result=sqlsession.update("mapper.board.image_update",imagevo);
+		int result = sqlsession.update("mapper.board.image_update", imagevo);
 		return result;
-		
+
 	}
-	
+
 	@Override
 	public int board_update(KjhBoardVO kbvo) {
-		int result= sqlsession.update("mapper.board.board_update",kbvo);
+		int result = sqlsession.update("mapper.board.board_update", kbvo);
 		return result;
 	}
-	
 
 	@Override
 	public int board_delete(KjhBoardVO kbvo) {
-		// TODO Auto-generated method stub
-		return 0;
+		int result = sqlsession.delete("mapper.board.board_delete", kbvo);
+		return result;
 	}
 
 	@Override
 	public List<ImageVO> image_select_list(String b_num) {
-		List<ImageVO> list = sqlsession.selectList("mapper.board.select_image",b_num);
+		List<ImageVO> list = sqlsession.selectList("mapper.board.select_image", b_num);
 		return list;
 	}
 

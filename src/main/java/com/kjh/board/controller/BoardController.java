@@ -3,38 +3,24 @@ package com.kjh.board.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
-import org.springframework.web.multipart.MultipartRequest;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.method.annotation.UriComponentsBuilderMethodArgumentResolver;
 
-import com.kjh.board.HomeController;
 import com.kjh.board.service.BoardService;
 import com.kjh.board.service.CommentService;
 import com.kjh.board.service.MemberService;
@@ -293,14 +279,17 @@ public class BoardController {
 		kbvo.setB_num(b_num);
 		kbvo = boardservice.board_select_one(kbvo);
 		List<ImageVO> imagevo_list = boardservice.select_image(b_num);
-		String image_file_name = imagevo_list.get(0).getImage_file_name();
-		for (int i = 1; i < imagevo_list.size(); i++) {
-			String image_file_name2 = imagevo_list.get(i).getImage_file_name();
-			if(image_file_name.equals(image_file_name2)) {
-				imagevo_list.remove(i);
+		if(imagevo_list.size()>0) { //이 if문을 쓰는 이유는 이미지가 없는 글일때 조회시 에러가 나기때문
+			String image_file_name = imagevo_list.get(0).getImage_file_name();
+			for (int i = 1; i < imagevo_list.size(); i++) {
+				String image_file_name2 = imagevo_list.get(i).getImage_file_name();
+				if(image_file_name.equals(image_file_name2)) {
+					imagevo_list.remove(i);
+				}
 			}
+	
 		}
-
+		
 		request.setAttribute("kbvo", kbvo);
 		request.setAttribute("imagevo_list", imagevo_list);
 		return "board_update_form";
@@ -336,14 +325,16 @@ public class BoardController {
 	}
 
 	// 글 삭제
-	// @RequestMapping
-	public String write_delete() {
-
-		return null;
+	@RequestMapping(value = "/board_delete")
+	public String board_delete(String b_num) {
+		KjhBoardVO kbvo = new KjhBoardVO();
+		kbvo.setB_num(b_num);
+		boardservice.board_delete(kbvo);
+		return "forward:/board_list";
 	}
 
 	// 댓글 달기
-	@RequestMapping(value = "/reply_insert")
+	@RequestMapping(value = "/reply_insert") 
 	public String reply_insert(CommentsVO commentsVO, HttpServletRequest request, HttpSession session) {
 
 		log.info("reply_insert 컨트롤러 시작 ::: ");

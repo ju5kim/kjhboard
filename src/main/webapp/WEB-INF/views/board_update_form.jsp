@@ -14,7 +14,6 @@ function board_list_btn(){ // 글 목록 이동
 	location.href="/board/board_list";
 }
 function board_update_btn(){
-	//location.href="/board/board_update";
 	this.board.action ="/board/board_update"
 	this.enctype="multipart/form-data";
 	this.board.submit();
@@ -30,6 +29,12 @@ function add_btn(){
 	var div = document.getElementById("div_file");
 	div.appendChild(input);
 }
+function board_delete_btn(){
+	var form = document.getElementById('board');
+	form.setAttribute("action","/board/board_delete");
+	document.form.submuit();
+}
+
 </script>
 </head>
 <body>
@@ -39,7 +44,7 @@ function add_btn(){
 	KjhBoardVO kbvo = (KjhBoardVO) request.getAttribute("kbvo");
 	List list = (List) request.getAttribute("imagevo_list");
 	%>
-	<form name="board" enctype="multipart/form-data" method="post">
+	<form name="board" id="board" enctype="multipart/form-data" method="post">
 	<table border="1" >
 		<tr>
 			<td>글번호</td>
@@ -92,6 +97,7 @@ function add_btn(){
 		</tr>
 	</table>
 	<button onclick="board_update_btn()">수정하기</button>
+	<button onclick="board_delete_btn()">삭제하기</button>
 	</form>
 	<button onclick="board_list_btn()">글 목록으로 이동하기</button>
 
