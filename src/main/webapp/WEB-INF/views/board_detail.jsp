@@ -161,14 +161,22 @@ function board_update_btn(){
 		</tr>
 	</table>
 
+	<%
+	String m_num = (String) session.getAttribute("m_num");
+	String m_num2 = kbvo.getM_num();
+	if(m_num.equals(m_num2)){
+		%>
+	<button onclick="board_update_btn()">글 수정 페이지로 이동</button>	
+		<%
+	}
+	%>
 	
-	<button onclick="board_update_btn()">글 수정 페이지로 이동</button>
 	</form>
 	<button onclick="board_list_btn()">글 목록으로 이동</button>
 	<br>
 	<h3>댓글 쓰기</h3>
 	<%
-		String m_num = (String) session.getAttribute("m_num");
+	
 	if (m_num != "") {
 	%>
 	<form id="" name="" action="/board/reply_insert">
@@ -246,18 +254,13 @@ function board_update_btn(){
 						}
 					%>
 					<!--여기서 jsp for문 돌려서 조회한 값 보이게 하기  -->
-
 				</table></td>
 		</tr>
-
 		<%
 			}
 		}
-		}
+	}
 		%>
-<% 
-	
-%>
 	</table>
 </body>
 </html>
