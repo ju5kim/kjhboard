@@ -185,6 +185,15 @@
     <version>0.4.13</version>
 </dependency>
 
+<!-- 솔트(Salt) 암호화 -->
+<!-- https://mvnrepository.com/artifact/org.corpus-tools/salt-api -->
+<dependency>
+    <groupId>org.corpus-tools</groupId>
+    <artifactId>salt-api</artifactId>
+    <version>3.4.2</version>
+</dependency>
+
+
 	</dependencies>
 	<build>
 		<plugins>

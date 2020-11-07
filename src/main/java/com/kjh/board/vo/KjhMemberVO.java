@@ -13,13 +13,13 @@ public class KjhMemberVO {
 	private String m_addr;
 	private String m_reg_date;
 	private String m_update_date;
-	
+	private String salt;
+
 	public KjhMemberVO() {
 		
 	}
 	public KjhMemberVO(String m_num, String m_id, String m_pw, String m_name, String m_phone, String m_email,
-			String m_addr, String m_reg_date, String m_update_date) {
-		super();
+			String m_addr, String m_reg_date, String m_update_date,String salt) {
 		this.m_num = m_num;
 		this.m_id = m_id;
 		this.m_pw = m_pw;
@@ -84,5 +84,11 @@ public class KjhMemberVO {
 	public void setM_update_date(String m_update_date) {
 		this.m_update_date = m_update_date;
 	}
-	
+	public String getSalt() {
+		return salt;
+	}
+	public void setSalt(String salt) {
+		this.salt = salt;
+		
+	}
 }

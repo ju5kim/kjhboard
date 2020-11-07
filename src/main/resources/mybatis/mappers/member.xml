@@ -55,7 +55,8 @@
 	#{m_email},
 	#{m_addr},
 	sysdate,
-	sysdate
+	sysdate,
+	#{salt}
 	)
     ]]>
 	</insert>
@@ -70,6 +71,11 @@
 	]]>
 	</select>
 	
+	<select id="select_salt" parameterType="kjhmemberVO" resultType="String" >
+	<![CDATA[
+	select salt, m_pw from kjhmember where m_id = #{m_id} 
+	]]>
+	</select>
 																
 	<select id="mem_val_id" parameterType="kjhmemberVO" resultType="String">
 	<![CDATA[

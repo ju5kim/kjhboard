@@ -69,7 +69,7 @@ public class MemberDAOImpl implements MemberDAO{
 	
 	//마이페이지에서 나의 회원값
 	// 실험 return 타입을 일반 타입으로 하고 sql을 실행해도 vo에 담아서 올까?
-	//만약 return 타입을 vo 객체로 한다면 vo에 담아서 올까?
+	//만약 return 타입을 vo 객체로 한다면 vo에 담아서 온다
 	@Override
 	public KjhMemberVO mem_select_kvo(KjhMemberVO kvo) {
 		kvo=sqlsessionT.selectOne("mapper.member.mem_select_kvo", kvo);
@@ -84,21 +84,19 @@ public class MemberDAOImpl implements MemberDAO{
 
 	@Override 
 	public int mem_update(KjhMemberVO kjhmemberVO) {
-//		System.out.println(kjhmemberVO.getM_num());
-//		System.out.println(kjhmemberVO.getM_id());
-//		System.out.println(kjhmemberVO.getM_pw());
-//		System.out.println(kjhmemberVO.getM_name());	
-//		System.out.println(kjhmemberVO.getM_phone());
-//		System.out.println(kjhmemberVO.getM_email());
-//		System.out.println(kjhmemberVO.getM_addr());
-		int a=sqlsessionT.update("mapper.member.mem_update",kjhmemberVO);
+		int result=sqlsessionT.update("mapper.member.mem_update",kjhmemberVO);
 	
-		return a;
+		return result;
 	}
 
 	@Override
 	public int mem_delete(KjhMemberVO kjhmemberVO) {
 		int result=sqlsessionT.delete("mapper.member.mem_delete", kjhmemberVO);
+		return result;
+	}
+	@Override
+	public String select_salt(KjhMemberVO kvo) {
+		String result=sqlsessionT.selectOne("mapper.member.select_salt",kvo);
 		return result;
 	}
 

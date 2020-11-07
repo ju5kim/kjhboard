@@ -24,6 +24,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.kjh.board.service.BoardService;
 import com.kjh.board.service.CommentService;
 import com.kjh.board.service.MemberService;
+import com.kjh.board.util.SHA256Util;
 import com.kjh.board.vo.CommentsVO;
 import com.kjh.board.vo.ImageVO;
 import com.kjh.board.vo.KjhBoardVO;
@@ -45,6 +46,9 @@ public class BoardController {
 
 	@Autowired
 	CommentService commentservice;
+
+	@Autowired
+	SHA256Util sha256Util;
 
 	// 게시글 목록으로 가는 페이지
 	@RequestMapping(value = "/board_list")
@@ -70,6 +74,7 @@ public class BoardController {
 	// 로그인 입력이 완료되면 실행
 	@RequestMapping(value = "/loginOK", method = RequestMethod.POST)
 	public String loginOK(KjhMemberVO kvo, HttpServletRequest request) {
+		
 		boolean result = memberservice.mem_longin(kvo, request);
 		if (result) {
 			log.info("로그인 완료");
@@ -96,6 +101,12 @@ public class BoardController {
 	@RequestMapping(value = "/registerOK", method = RequestMethod.POST)
 	public ModelAndView registerOK(HttpServletRequest request, KjhMemberVO kjhMemberVO) {
 		ModelAndView mav = new ModelAndView();
+
+		String salt = sha256Util.generateSalt();
+		kjhMemberVO.setSalt(salt);
+		String pw_sha = sha256Util.getEncrypt(kjhMemberVO.getM_pw(), salt);
+		kjhMemberVO.setM_pw(pw_sha);
+
 		boolean result = memberservice.mem_insert(kjhMemberVO, request);
 		if (result == true) {
 			log.info("회원가입성공");
@@ -200,7 +211,7 @@ public class BoardController {
 	// 글을 클릭했을때 상세페이지로 이동
 	@RequestMapping(value = "/board_detail", method = { RequestMethod.POST, RequestMethod.GET })
 //	public String write_detail(KjhBoardVO kbvo, HttpServletRequest request) { // 매개변수를 vo를 받으면 get이 자꾸 작동해서 에러난거임
-	public String write_detail(HttpServletRequest request)  throws Exception{
+	public String write_detail(HttpServletRequest request) throws Exception {
 		log.info("board_detail 컨트롤러 시작 :::");
 		KjhBoardVO kbvo = (KjhBoardVO) request.getAttribute("kbvo");// 글쓰기 완료 후 넘어온다.
 
@@ -212,7 +223,7 @@ public class BoardController {
 			kbvo = boardservice.board_select_one(kbvo);
 			List<ImageVO> imagevo_list = boardservice.select_image(b_num);
 			// 0번 인덱스의 값으로 나머지 인덱스를 돌면서 값을 비교한다. 그런데 이것도 2중 for문으로 하면 뭔가 될거 같은데? 비교 알고리즘?
-			if(imagevo_list!=null&&imagevo_list.size()>0) {
+			if (imagevo_list != null && imagevo_list.size() > 0) {
 				String image_file_name = imagevo_list.get(0).getImage_file_name();
 				for (int i = 1; i < imagevo_list.size(); i++) {
 					String image_file_name2 = imagevo_list.get(i).getImage_file_name();
@@ -279,17 +290,17 @@ public class BoardController {
 		kbvo.setB_num(b_num);
 		kbvo = boardservice.board_select_one(kbvo);
 		List<ImageVO> imagevo_list = boardservice.select_image(b_num);
-		if(imagevo_list.size()>0) { //이 if문을 쓰는 이유는 이미지가 없는 글일때 조회시 에러가 나기때문
+		if (imagevo_list.size() > 0) { // 이 if문을 쓰는 이유는 이미지가 없는 글일때 조회시 에러가 나기때문
 			String image_file_name = imagevo_list.get(0).getImage_file_name();
 			for (int i = 1; i < imagevo_list.size(); i++) {
 				String image_file_name2 = imagevo_list.get(i).getImage_file_name();
-				if(image_file_name.equals(image_file_name2)) {
+				if (image_file_name.equals(image_file_name2)) {
 					imagevo_list.remove(i);
 				}
 			}
-	
+
 		}
-		
+
 		request.setAttribute("kbvo", kbvo);
 		request.setAttribute("imagevo_list", imagevo_list);
 		return "board_update_form";
@@ -334,7 +345,7 @@ public class BoardController {
 	}
 
 	// 댓글 달기
-	@RequestMapping(value = "/reply_insert") 
+	@RequestMapping(value = "/reply_insert")
 	public String reply_insert(CommentsVO commentsVO, HttpServletRequest request, HttpSession session) {
 
 		log.info("reply_insert 컨트롤러 시작 ::: ");
