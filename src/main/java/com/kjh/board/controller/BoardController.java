@@ -1,16 +1,27 @@
 package com.kjh.board.controller;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +35,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.kjh.board.service.BoardService;
 import com.kjh.board.service.CommentService;
 import com.kjh.board.service.MemberService;
+import com.kjh.board.service.NaverLoginServicImpl;
 import com.kjh.board.util.SHA256Util;
 import com.kjh.board.vo.CommentsVO;
 import com.kjh.board.vo.ImageVO;
@@ -46,6 +58,9 @@ public class BoardController {
 
 	@Autowired
 	CommentService commentservice;
+
+	@Autowired
+	NaverLoginServicImpl naverloginservice;
 
 	@Autowired
 	SHA256Util sha256Util;
@@ -74,7 +89,7 @@ public class BoardController {
 	// 로그인 입력이 완료되면 실행
 	@RequestMapping(value = "/loginOK", method = RequestMethod.POST)
 	public String loginOK(KjhMemberVO kvo, HttpServletRequest request) {
-		
+
 		boolean result = memberservice.mem_longin(kvo, request);
 		if (result) {
 			log.info("로그인 완료");
@@ -437,5 +452,153 @@ public class BoardController {
 	// 대댓글 삭제
 	public String reply_re_delete() {
 		return null;
+	}
+
+	// ---------------네이버 로그인을 위한 ----------------------------------
+	/*
+	 * 설명 : 네이버 로그인 API
+	 * 
+	 * 주요사용기술: json-simple라이브러리 작성 법 https://developers.naver.com/docs/login/api/ 에서
+	 * JSP소스 1. naverlogin.jsp 는 로그인 화면에 붙여넣기 2. callback.jsp 에서 2번째 200번 상태를 확인하는
+	 * if문에서 json-simple라이브러리를 활용해서 access_token 값을 뽑아 온다. 그 값을 request에 담아 보낸다.
+	 * https://developers.naver.com/docs/login/profile/ 에서 JAVA소스 3. api에서 원하는 값을 모두
+	 * 넣고 main에 적힌 소스를 활용한다.
+	 * 
+	 * 
+	 * 주의 해야 할건 여기서 활용된것을 바탕으로 통신 성공을 하면 String 타입으로 값이 넘어오는데. 여기서 다시
+	 * json-simple라이브러리를 활용해서 값을 뽑아온다. 그리고 DB값을 조회를 먼저 해서 값이 있다면 세션만 부여하고 넘기고 값이 없다면
+	 * 회원가입을하고 세션을 부여하고 넘긴다.
+	 * 
+	 * 작성일: 20200820 작성자: 김주호
+	 */
+	@RequestMapping("/naverlogin")
+	public ModelAndView naverlogin(HttpServletRequest request) {
+		ModelAndView mav = new ModelAndView();
+		// 여기서 부터 아래 responseBody 까지는 내가 하는게 아니라 api의 문서를 그대로 활용
+		String access_token = (String) request.getAttribute("access_token");
+		
+		log.info("access_token:::" + access_token);
+		String token = access_token; // 네이버 로그인 접근 토큰;
+		String header = "Bearer " + token; // Bearer 다음에 공백 추가
+		String apiURL = "https://openapi.naver.com/v1/nid/me";
+		Map<String, String> requestHeaders = new HashMap<>();
+		requestHeaders.put("Authorization", header);
+		String responseBody = get(apiURL, requestHeaders);
+		log.info("responseBody ::: " + responseBody);
+
+		// {"resultcode":"00","message":"success","response":{"id":"21746765","age":"30-39","email":"rlaj005@naver.com","name":"\uae40\uc8fc\ud638","birthday":"10-09"}}
+		// 위에 값을 콘솔로 찍어본다. name 값이 유니코드인데 브라우저에서 자동으로 변환해서 읽고 json simple 라이브러리가 변환해준다.
+		JSONObject jsonObject = new JSONObject();
+		JSONParser parser = new JSONParser();
+		KjhMemberVO kvo = new KjhMemberVO();
+		try {
+			jsonObject = (JSONObject) parser.parse(responseBody);
+			String resultcode = (String) jsonObject.get("resultcode");
+			String message = (String) jsonObject.get("message");
+			jsonObject = (JSONObject) jsonObject.get("response"); // 여기서 response가 json객체 안에 json객체이기 때문에
+			String id = (String) jsonObject.get("id");
+			String age = (String) jsonObject.get("age");
+			String email = (String) jsonObject.get("email");
+			String name = (String) jsonObject.get("name");
+			String birthday = (String) jsonObject.get("birthday");
+
+			if (resultcode.equals("00") && message.equals("success")) {
+				// 통신을 성공적으로 받았다면 
+				//여기서 데이터가 없다면 회원가입을 하고
+				// 데이터가 있다면 회원 가입을 하지않는다.
+				kvo.setM_id(id);
+				kvo.setM_name(name);
+				kvo.setM_email(email);
+			
+//					nsVO=memberservice.naver_id_db_chek(mvo); 
+					String m_num = naverloginservice.naver_id_db_chek(kvo);
+					log.info("DB에서 ID체크하고 나온 값 ::: "+m_num);
+				// 기존에 회원가입이 되어 있다면
+				if (m_num != null) {
+					HttpSession session = request.getSession();
+					session.setAttribute("m_num", m_num);
+
+				} else {//회원가입이 되어 있지 않다면
+					log.info("회원가입이 되어 있지 않아서 실행");
+					log.info(kvo.getM_id());
+					log.info(kvo.getM_name());
+					log.info(kvo.getM_email());
+					int result = naverloginservice.naver_insert(kvo); // DB에 넣고
+					if (result > 0) {
+						log.info("회원가입완료");
+						KjhMemberVO resultVO;
+						
+						resultVO = naverloginservice.naver_login(kvo);
+						log.info("인서트된거 다시 실행 ::::");
+						m_num = resultVO.getM_num();
+						HttpSession session = request.getSession();
+						session.setAttribute("m_num", m_num);
+						session.setMaxInactiveInterval(-1);// 세션 무한대
+					} else {
+						log.info("insert가 실행되지 않았습니다.");
+					} // end of if(insert result)
+				} // end of if(naverSelect mnum)
+			} else {
+				log.info("네이버 API에서 값을 받아오지 못했습니다. ");
+			} // end of if(resultcode,massage)
+		} catch (Exception e) {
+			log.info("json 객체 변환실패");
+			e.printStackTrace();
+			mav.setViewName("login_form");
+		} // end of try catch
+		mav.setViewName("forward:/board_list");
+		return mav;
+	}// end of naverlogin controller
+
+	@RequestMapping(value = "/callback")
+	public static ModelAndView callbackPage() {
+		ModelAndView mav = new ModelAndView();
+		mav.setViewName("callback");
+		return mav;
+	}
+
+	public static String get(String apiUrl, Map<String, String> requestHeaders) {
+		HttpURLConnection con = connect(apiUrl);
+		try {
+			con.setRequestMethod("GET");
+			for (Map.Entry<String, String> header : requestHeaders.entrySet()) {
+				con.setRequestProperty(header.getKey(), header.getValue());
+			}
+			int responseCode = con.getResponseCode();
+			if (responseCode == HttpURLConnection.HTTP_OK) { // 정상 호출
+				return readBody(con.getInputStream());
+			} else { // 에러 발생
+				return readBody(con.getErrorStream());
+			}
+		} catch (IOException e) {
+			throw new RuntimeException("API 요청과 응답 실패", e);
+		} finally {
+			con.disconnect();
+		}
+	}
+
+	public static HttpURLConnection connect(String apiUrl) {
+		try {
+			URL url = new URL(apiUrl);
+			return (HttpURLConnection) url.openConnection();
+		} catch (MalformedURLException e) {
+			throw new RuntimeException("API URL이 잘못되었습니다. : " + apiUrl, e);
+		} catch (IOException e) {
+			throw new RuntimeException("연결이 실패했습니다. : " + apiUrl, e);
+		}
+	}
+
+	public static String readBody(InputStream body) {
+		InputStreamReader streamReader = new InputStreamReader(body);
+		try (BufferedReader lineReader = new BufferedReader(streamReader)) {
+			StringBuilder responseBody = new StringBuilder();
+			String line;
+			while ((line = lineReader.readLine()) != null) {
+				responseBody.append(line);
+			}
+			return responseBody.toString();
+		} catch (IOException e) {
+			throw new RuntimeException("API 응답을 읽는데 실패했습니다.", e);
+		}
 	}
 }

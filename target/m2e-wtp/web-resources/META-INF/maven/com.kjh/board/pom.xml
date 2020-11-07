@@ -193,6 +193,14 @@
     <version>3.4.2</version>
 </dependency>
 
+<!-- json-simple 네이버 로그인이나 클라이언트 와 json데이트럴 주고 받기 위한  -->
+<!-- https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple -->
+<dependency>
+    <groupId>com.googlecode.json-simple</groupId>
+    <artifactId>json-simple</artifactId>
+    <version>1.1.1</version>
+</dependency>
+
 
 	</dependencies>
 	<build>
