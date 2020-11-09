@@ -14,4 +14,16 @@ public class CommonError {
 		model.addAttribute("msg","Accessdenied 입니다.");
 		return "/sample/accessError";
 	}
+	@RequestMapping("/customLogin")
+	public String loginInput(String error,String logout,Model model) {
+		
+		if(error != null) {
+			model.addAttribute("error", "로그인 에러 다시 체크하세요");
+		}
+		if(logout != null) {
+			model.addAttribute("logout", "로그아웃 되었습니다.");
+		}
+		return "/sample/customLogin";
+	}
+	
 }

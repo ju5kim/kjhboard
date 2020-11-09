@@ -17,4 +17,5 @@ public class AuthController {
 	@GetMapping("/admin")
 	public void doAdmin() {
 	}
+	
 }
