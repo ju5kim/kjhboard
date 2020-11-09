@@ -43,15 +43,14 @@ function registerform(){
 				apiURL += "&state=" + state;
 				session.setAttribute("state", state);
 				%>
+네이버 로그인
 				<div class="naver_btn">
 					<a href="<%=apiURL%>">
-				<!-- <img height="50"
-						src="http://static.nid.naver.com/oauth/small_g_in.PNG" /></a> -->	
-					<img height="60" width="300"
-						src="/spw/include/img/naver.PNG"/></a>
+				<img height="50"
+						src="http://static.nid.naver.com/oauth/small_g_in.PNG" /></a>	
 				</div>
-<h6>네이버로그인</h6><br>
-<h6>카카오로그인</h6><br>
+
+
 <button id="register_btn" name="register_btn" onclick="registerform()">회원가입</button>
 </body>
 </html>

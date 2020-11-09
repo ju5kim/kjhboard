@@ -15,42 +15,6 @@
 <meta charset="UTF-8">
 <title>글 상세페이지</title>
 <script type="text/javascript">
-	/*function reply_re_form(i){
-		
-	var reply_table = document.getElementById('reply_table');
-	var reply_re_tr = document.getElementById('reply_re'+i); // tr태그선택
-
-	var reply_re_tr_td0 = document.createElement('td');
-	reply_re_tr.appendChild(reply_re_tr_td0);
-	var reply_re_tr_td = document.createElement('td');
-	reply_re_tr.appendChild(reply_re_tr_td);
-	
-	var reply_re_tr_td_form = document.createElement('form');
-	reply_re_tr_td_form.setAttribute("action","/board/reply_re_insert");
-	reply_re_tr_td.appendChild(reply_re_tr_td_form);
-	
-	var reply_re_tr_td_form_input = document.createElement('input');
-//	document.reply_re_tr_td_form_input.setAttribute("type", "text"); 이렇게 하면 에러 난다.
-	reply_re_tr_td_form_input.setAttribute("type", "text");
-	reply_re_tr_td_form_input.setAttribute("name", "c_content");
-	reply_re_tr_td_form.appendChild(reply_re_tr_td_form_input);
-	
-	
-	//글 해당 글에서 회원값
-	var reply_re_tr_td_form_input_m_num = document.createElement('input');
-	reply_re_tr_td_form_input_m_num.setAttribute("type", "hidden");
-	reply_re_tr_td_form_input_m_num.setAttribute("name", "c_content");
-	reply_re_tr_td_form.appendChild(reply_re_tr_td_form_input_m_num);
-	
-	
-	
-	var reply_re_tr_td_form_submit = document.createElement('input');
-	reply_re_tr_td_form_submit.setAttribute("type","submit");
-	reply_re_tr_td_form_submit.setAttribute("value","등록하기");
-	reply_re_tr_td_form.appendChild(reply_re_tr_td_form_submit);
-	}
-	*/
-	
 	function reply_re_form(i){
 
 		alert(" 자바 스크립트 처음 실행 시 click_count ::: " +click_count);
@@ -103,6 +67,9 @@ function board_update_btn(){
 	//location.href="/board/board_update";
 	this.board.action ="/board/board_update_form"
 	this.board.submit();
+}
+function login_btn(){
+	location.href="/board/login_form";
 }
 </script>
 
@@ -164,10 +131,15 @@ function board_update_btn(){
 	<%
 	String m_num = (String) session.getAttribute("m_num");
 	String m_num2 = kbvo.getM_num();
-	if(m_num.equals(m_num2)){
+	if(m_num2!=null&&m_num!=null){
+
+		if(m_num.equals(m_num2)){
 		%>
 	<button onclick="board_update_btn()">글 수정 페이지로 이동</button>	
 		<%
+			}
+	}else{
+		m_num2="";
 	}
 	%>
 	
@@ -177,7 +149,7 @@ function board_update_btn(){
 	<h3>댓글 쓰기</h3>
 	<%
 	
-	if (m_num != "") {
+	if (m_num != ""&&m_num!=null) {
 	%>
 	<form id="" name="" action="/board/reply_insert">
 		내정보 : <input type="text" id="m_num" name="m_num" value="<%=m_num%>"
@@ -188,6 +160,12 @@ function board_update_btn(){
 	</form>
 
 	<%
+		}else{
+			%>
+			회원으로 로그인 해야 댓글을 달 수 있습니다.
+		<button id="login_btn" onclick="login_btn()">로그인</button>
+			<%
+			
 		}
 	%>
 	<br>

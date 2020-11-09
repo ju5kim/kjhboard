@@ -26,14 +26,6 @@
 	function go_write_form() {
 		location.href = "/board/write_form"
 	}
-/*
-function go_board_detail(i) {
-		//location.href = "/board/board_detail"
-		document.detail_form.action = "/board/board_detail" + i;
-		document.detail_form.submit();
-	}
-*/	
-	
 </script>
 <script type="text/javascript">
 	function click_tr(i){
@@ -147,7 +139,6 @@ function go_board_detail(i) {
 			//1일때1 2일때11 3일때 21 4일때 31;
 			//그룹이 1 일때 now_page *10 -9;
 			//2 일때 now_page *10-9;
-			//3 일때 now_page *10-9;
 			
 			%>
 				<a href="/board/board_list?now_group=<%=now_group-1%>">이전</a>

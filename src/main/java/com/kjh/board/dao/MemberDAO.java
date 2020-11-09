@@ -1,7 +1,5 @@
 package com.kjh.board.dao;
 
-import org.springframework.stereotype.Repository;
-
 import com.kjh.board.vo.KjhMemberVO;
 
 
