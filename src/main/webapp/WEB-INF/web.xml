@@ -3,19 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee https://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 
-	<!-- root-context.xml을 설정하기 -->
-	<!-- <context-param> <param-name>contextConfigLocation</param-name> <param-value>/WEB-INF/spring/root-context.xml</param-value> 
-		</context-param> -->
-	<!-- mybatis.xml을 로드 설정하기 -->
-	<context-param>
-		<param-name>contextConfigLocation</param-name>
-		<param-value>
-			/WEB-INF/spring/action-mybatis.xml
-		</param-value>
-	</context-param>
-
-	<!-- 위에 설정한 context들을 로드하기 -->
-	<listener>
+		<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener
 		</listener-class>
 	</listener>
@@ -29,8 +17,8 @@
 			<param-name>contextConfigLocation</param-name>
 			<param-value>
 			/WEB-INF/spring/appServlet/servlet-context.xml
-			/WEB-INF/spring/appServlet/security-context.xml
 			</param-value>
+			
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
@@ -39,7 +27,10 @@
 		<servlet-name>appServlet</servlet-name>
 		<url-pattern>/</url-pattern>
 	</servlet-mapping>
-	<!-- 한글 필터 -->
+	
+	
+	
+<!-- 한글 필터 -->	
 	<filter>
 		<filter-name>encodingFilter</filter-name>
 		<filter-class>org.springframework.web.filter.CharacterEncodingFilter
@@ -57,12 +48,26 @@
 		<filter-name>encodingFilter</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
+	<!-- 스프링 시큐리티 필터 체인 -->
 	<filter>
-	<filter-name>springSecurityFilterChain</filter-name>
-	<filter-class>org.springframework.web.filter.delegatingFilterProxy</filter-class>
+		<filter-name>springSecurityFilterChain</filter-name>
+		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
 	</filter>
 	<filter-mapping>
-	<filter-name>springSecurityFilterChain</filter-name>
-	<url-pattern>/*</url-pattern>
+		<filter-name>springSecurityFilterChain</filter-name>
+		<url-pattern>/*</url-pattern>
 	</filter-mapping>
+	
+	<!-- root-context.xml을 설정하기 -->
+	<!-- mybatis.xml을 로드 설정하기 -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>
+			/WEB-INF/spring/action-mybatis.xml
+			/WEB-INF/spring/appServlet/security-context.xml
+		</param-value>
+	</context-param>
+
+	<!-- 위에 설정한 context들을 로드하기 -->
+
 </web-app>

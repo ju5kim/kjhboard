@@ -1,8 +1,5 @@
 package com.kjh.board.vo;
 
-import lombok.Data;
-
-
 public class KjhMemberVO {
 	private String m_num;
 	private String m_id;
