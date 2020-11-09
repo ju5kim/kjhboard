@@ -8,9 +8,13 @@
 	<bean id="customAccessDenied"
 		class="com.kjh.board.accessDenied.CustomAccessDeniedHandler">
 	</bean>
-	<bean id="customLoginSuccess" 
+	<bean id="customLoginSuccess"
 		class="com.kjh.board.accessDenied.CustomAuthenticationSuccessHandler">
 	</bean>
+	<bean id="customUserService"
+		class="com.kjh.board.accessDenied.CustomUserDetailService">
+	</bean>
+	<bean id="bcryptPasswordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"></bean>
 
 
 	<security:http>
@@ -22,22 +26,16 @@
 			access="hasRole('ROLE_ADMIN')" />
 		<security:access-denied-handler
 			ref="customAccessDenied" />
-		<security:form-login login-page="/customLogin" authentication-success-handler-ref="customLoginSuccess" />
+		<security:form-login login-page="/customLogin"
+			authentication-success-handler-ref="customLoginSuccess" />
 
 	</security:http>
 
 	<security:authentication-manager>
 
-		<security:authentication-provider>
-
-			<security:user-service>
-				<security:user name="member" password="{noop}member"
-					authorities="ROLE_MEMBER" />
-
-				<security:user name="admin" password="{noop}admin"
-					authorities="ROLE_ADMIN,ROLE_MEMBER" />
-
-			</security:user-service>
+		<security:authentication-provider
+			user-service-ref="customUserService">
+			<security:password-encoder ref="bcryptPasswordEncoder"></security:password-encoder>
 
 		</security:authentication-provider>
 
