@@ -1,0 +1,995 @@
+프로젝트 게시판 만들기
+
+기본적인 환경설정------------------------------
+일단 pom.xml먼저 설정
+기본적인 스프링,자바,서블릿,jstl 등 버전 맞추기
+
+WEB-INF/lib 폴더에 넣어 놓은 
+ojdbc6.jar를 읽어 로드하는 것을 pom.xml에서 설정
+
+마이바티스 설정
+log4j설정
+기본적인 셋팅이 완료되었으면 실행해본다.
+home.jsp가 제대로 뜨는지
+
+그럼이제 여기서 일단 DB연결(datasouce)정보를 설정한다. 
+
+db구조화한다. DB생성
+
+
+
+--------------개발
+1. 먼저 구현하고자 하는 기능을 작성 한다.
+2. 전체적으로 데이터가 이동하는 흐름을 파악해서 작성해 둔다.
+2. 들어오는 값과 나오는 값을 적어둔다. 어떤 조건과 어떤 비교 기준값이 있는지 적어 둔다.-- 정확하지 않아도 된다.
+3. 어떤 방법으로 구현할지 적는다. -- 생각보다 오래 걸림
+4. 뷰를 먼저 만든다. 뷰는 일단 실행되면 해당 뷰로 가게 하고 
+5. 실행되어야 할 것들이나 주의해야 할것들을 뷰에 적어둔다.
+
+먼저 controller에서 뷰로 이동하는 것들만 만들어 놓는다.
+컨트롤러를 만들때 실행되어야 할 기능들을 주석으로 적어둔다.
+
+
+------------------------마이바티스
+마이바티스 설정이 좀 이상하면 스프링이 오류가 난다.
+
+mybatis에서 모델설정(TypeAlias)가 오류나도 스프링자체가 오류난다.
+DAO에서 sqlsessionTemplet(아파치.마이바티스)를 autowird로 사용한다. = sqlsessionTemplet이 마이바티스를 사용한다.
+mapper.xml의 namespace태그 값은 DAO에서 sqlsession.ISUD( )의 매개변수로 사용된다.
+그리고 mapper.xml에 있는 메서드는 DAO의 메서드와 이름의 값을 같게 맞추고 parameter값도 같게 맞춰준다. 
+
+
+DAO에서 sqlsession리턴타입을 VO로 하고 resultType을 VO로 하고 컬럼값들을 맞춰주면  자동으로 셋팅되어나올 수 있다.
+DAO에서  sqlsession리턴 타입을 String으로 resulttype을 String으로 해도 자동으로 셋팅되어 나온다.
+리턴타입을 VO로 하면 
+한 행을 객체로 보고 차곡차곡 담은 뒤 mybatis가 알아서 리스트에 담아반환한다.
+SQL문에서  as로 칼럼의 별명을 VO에 속성들과 맞춰주면 데이터가 더 알맞게 들어간다.
+만약 DB와 객체 멤버변수 이름이 같다면 안해줘도 된다.
+http://www.devkuma.com/books/pages/740 참조
+
+
+DAO에서 selseesion리턴 타입을 map으로 설정시 
+
+select문을 실행했을 경우를 생각해보면 
+1.칼럽 값과 
+2.결과 값이 같이 리턴 되게 된다
+그랬을 때 map이나 list(set)로 값을 바인딩해 리턴을 받아서 사용하면 된다.
+mapper.xml에서 resultMap설정을 사용해주면 된다.
+ 
+그리고 서비스에서 트랜젝션을 사용한다.(여러 DAO작업이 통합되는 곳이라)
+<!-- xml 트랜잭션 설정  dataSource 둔곳, 나는 마이바티스 config--> 
+<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property ref="dataSource" />
+</bean>
+ 
+<!-- 1. @Transactional 쓸거면 이것만 설정 -->
+<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
+
+마이바티스에 태그에서
+resultHandler는 대용량 DB 데이터를 다룰 때 사용하는 것으로 OOM(out of memory) 발생시 
+사용하며 행을 순차적 실행되는 것
+
+rowbounds 
+참조
+https://m.blog.naver.com/PostView.nhn?blogId=tamingggu&logNo=221591464149&proxyReferer=https:%2F%2Fwww.google.com%2F
+
+-------------------유효성 검사------------
+그런데 여기서 문제점은 회원가입을 할 때 만약에 id가 있는 것이라면 회원가입을 못하게 해야한다.
+즉 DB에는 유니크 값으로 주어서 실행시 어차피 에러가 나서 실행이 불가능하고 에러페이지를 띄우겠지만
+
+내가 생각한 처리 방법은 4가지 이다.
+1. 서비스 단에서 처리(try catch나 if을 사용해서 화면을 이동시키기)
+2. ajax로 뷰단에서 
+3. DB에서 조건문으로
+4. 마이바티스에서 동적쿼리를 사용하는 방법
+5. 자바스크립트 및 정규식 사용
+1,2,4을 구현하도록 하자.
+성능은 어느게 좋은지 모르겠다.
+
+sql count함수-------------------------------------------------
+sql에서 count 함수의 수행에 따른 속도 비교
+1) COUNT(*) : 0:00:00.029
+2) COUNT(컬럼) : 0:00:00.201
+3) COUNT(DISTINCT(컬럼)) : 0:00:02.413
+인덱스를 주어도 count(*)이 더 빠르다.  
+*보다 컬럼만 해서 조회하는게 더 빠를 것이라고 생각하기 쉽다.
+
+DB에 id값의 유무를 체크할 때 
+여기서 궁금한 것은 count를 쓰는것이 좋을지 그냥 하는것이 성능이 좋을 지에 관한 정보가 필요하다.
+참조 사이트 : https://otsteam.tistory.com/136
+리턴 타입을 boolean 타입을 사용했는데. boolean 타입이면 마이바티스가 작동을 할까?
+작동하지 않는다. int타입만 작동 
+selectKey를 사용하면 이런 기능들 이용가능
+칼럼명과 KeyProperty와 selectKey 내부의 조회문을 맞춰주면 
+자동으로 셋팅되어 나온다. insert update delete 하고 실행한 값에 대한 정보들을 뽑아오는데 유용하다
+트리거와 비슷한 기능으로 사용되기도 한다.
+
+BadSqlGrammarException은 다양한 이유가 있지만  ;  괄호, 매개변수
+update문에서 괄호를 주의하자 
+----------------------------------------------------------------------------------------------
+질문 : validattion 메서드에서 리턴을 boolean을 주었다면 
+유효성 검사를 통과한 것을 ture로 주나 통과하지 못한것을 true로 주어야 하나
+나는 일단 통과한 것을 true로 주었다. 
+
+-----------------------------------------------------------------------------------------------------------------------------
+로그인 기능
+세션값을 주어 활용하도록하자.
+세션값을 회원번호로 주려고 하는데 회원번호로 주려고 한다 다른 값을 비교기준값으로  where 조건으로 값을 뽑아야하는데
+ID값으로 회원번호를 뽑아야겠다. 그렇게 할려면 회원번호는 유니크 조건을 주어야한다.
+
+로그인 완료 시 메인 게시글 리스트로 이동
+로그아웃은 세션값을 지우고 메인페이지로 이동한다.
+-----------------------------------------------------------------------------------------------------------------------------
+마이페이지 기능
+마이페이지에서 회원정보 수정을 할 수 있다.
+마이페이지에서는 kvo만 사용해보도록 하자 
+-- 여기서 mapper.xml을 resultType을 kjhmemberVO로 명시를 해주었는데 이걸 생략해도 되는지 여부?
+-- 그리고 DAO에서 selectOne 사용시 파라미터를 명시 했는데 이것도 생략해도 되는지 여부// 생략 불가능 
+-- 그런데 생각을 해보니까 생략이 가능하더라도 생략을 하지 않는 것이 다른 사람들이 봐도 무리가 업지 않을까 라는 생각이든다.
+
+html에서 form태그 안에 table 태그 사용가능
+그리고 disalbled와 readonly 속성의 차이점은 readonly는 값이 전송되지만 disalbed는 전송이 되지않는다.
+
+---------------------컨트롤러 정리---------------------------------------------
+
+컨트롤러에 @RequestMapping과 동등한 레벨에서 @ResponseBody를 붙일 수 있다.
+컨트롤러 리턴타입
+String : jsp를 이용하는 경우 jsp파일의 이름(화면)을 나타냄 //컨트롤러에서 다른 컨트롤러로 값을 전송할때 "forward:/mypage"  "redirect:/mypage" 
+void : 호출하는 URL과 동일한 이름의 jsp를 나타냄(즉  @RequestMapping으로 셋팅되어 있는 값과 동일한 화면)
+VO, DTO타입 : 주로 json타입의 데이터를 만들어서 반환하는 용도
+ResponseEntity : reponse할때 HTTP헤더 정보와 내용을 가공
+Model, ModelAndView : Model로 데이터를 반환하거나 화면까지 지정 
+HttpHeaders : 응답에 내용없이 HTTP헤더 메세지만 전달하는 용도로 사용
+
+1.컨트롤러에서 retrun 타입을 String으로 했을 떄   
+===값이 넘어가지 않았다(컨트롤러 매개변수로 model객체를 받아 model에 setAttribute를 해줘야한다.)
+===매개변수로 @ModelAttribute(value = "넘어오는 화면에 바인딩되어 있는 값")변수 를 사용해도 된다.
+===매개변수로 일반 VO나 DTO 객체를 사용해도 가능한가 === 일단 객체는 jsp에 넘어 오는데 객체에 프로퍼티(속성)들이 값이 바인딩 되어 넘어오지 않는다.
+
+컨트롤러 매개변수
+//매개변수 VO를 사용하면 자동셋팅(뷰단에서 태그이름과 VO속성값 자동 바인딩), VO뿐만 아니라 String으로 받아도 input태그이름과 같으면 자동 바인딩(@RequestParam기능인데 생략가능하다)
+//이게 컨트롤러에 매개변수 VO가 들어가면 무조건 get방식으로  작동한다. 쿼리스트링에 값들을 자동으로 담아온다. 에러조심:
+ *  mem_insert( @RequestParam(value="m_id", defaultValue="기본값") String m_id )
+ *  mem_insert(String m_id)
+ *  위에 두개가 같지만  request 속성을 더욱 상세하게 적용할 수 있다.
+ *  
+ *  mem_insert(@RequestBody MemberVO mvo)
+ *  post방식만 작동하고 VO, JSON,XML 데이터를 받을 경우 사용
+ *  
+ *  mem_insert(@ModelAttribute MemberVO mvo)
+ *  post방식만 작동하고 VO, JSON,XML 데이터를 받을 경우 사용
+ *  
+ *  @ModelAttribute : http요청에 들어있는 속성값들을 memeberVO 객체에 자동으로 바인딩
+ *  @ModelAttribute([NAME]) 형태로 붙일 경우 jsp파일에서 ${[NAME].property} 로 model 객체 값을 사용가능
+
+화면에서 컨트롤러로 값을 넘길때
+무조건 form태그나 a태그, 이미지 태그 등등에서 href로 보내야하고 input태그 속성값이 VO에 컬럼과 이름을 같이 맞춘다.
+그냥 location 객체로 값을 넘길 경우는 세션(디폴트객체들) 값만 넘어간다.
+  
+---------------------------------------------------------------------------------------------------------------
+
+방법
+1.서비스 단에서 (값을 페이지로 넘기기전에 작업해서 넘기는 방법)
+2. 뷰 단에서 jsp에서 
+3. 뷰 자바스크립트에서 
+방법 jsp에서 String.split 함수를 사용했다.
+
+쉽게 자바 스크립트로 리셋팅작업을 수 있지만 
+마이페이지에서 수정 완료 후 에 다시 마이 페이지로 로딩하는데 이때 클라이언트 창에 알림을 띄우기 위해서
+request 객체에 update 실행 값 int를 받도록 했는데. 마이페이지를 처음 접속할때 update값이 적용되지 않았기 때문에 null이 뜬다.
+해결책 if 문을 사용사용해서 처리했다.  request.getAttribute는 객체를 반환한다. 그래서 조건문안에 넣어버렸고 결과값은 if문 밖에서 전역변수로 사용하게 했다.
+그리고 조건문에 맞으면 result값을 +시켯다.
+참조
+https://diaryofgreen.tistory.com/96
+
+---------------------------------------------------------------------------------------------------------------------------
+페이징 처리
+
+중요
+뷰에서 받는 값 = 입력값
+1.페이지 번호랑 
+2.그룹번호
+
+//1~10페이지 까지 그룹번호는 1  // 여기서 다시 1페이지면  row는 1~10 까지 2페이지면 row는 11~20 
+//11~20페이지 까지는 그룹번호 2 // 여기서 다시 페이지가 11이면 rows는 101~110 까지 12페이지 이면 row는 111~120까지 보여야 한다.
+
+디비에 주는 값
+1.start_row 
+2.end_row		
+
+
+	/*
+		 * 그룹 번호가 1이고 페이지 번호가 1일때
+		 * 그룹 번호 가 2이고 페이지 번호가 11일때
+		 * 그런데 생각을 해보면 일반 간단 출력일때는 그룹 번호가 필요가 없다. 
+		 * 그냥 페이지 번호만 있으면 해당 페이지의 값들을 출력한다.
+		 *
+		 * 책에서 사용하는 전제조건은  
+		 * 그룹 번호가 1이고 페이지가 1일떄
+		 * 그룹 번호가 2이고 페이지가 1일때 이렇게 되는데 
+		 * 그런데 이것도 이상한게 뷰에서 페이지 값을 클릭하면 페이지 번호가 11일 것이다.
+		 * 그러므로 이것 오류가 있다. 
+		 * 
+		 * DB에다가 그룹번호와 페이지번호 컬럼값을 주고 거기에 값을 셋팅하는 방법도 있을 것 같다.
+		 * 
+		 * 하지만 나는 이렇게 처리 했다.
+		 * 받는 값은 현제페이지와 현재그룹값을 받는다.
+		 * DB에서는 start값과 end값을 준다. 
+		 * 서비쿼리와 rownum을 사용해서 값을 출력해서 보여준다.
+		 * 
+		 * 일단 DB에 실제 총 row 갯수를 구함 
+		 * 실제 페이지의 총갯수 = (실제 총 row 갯수 / 한 페이지당 보여질row 갯수) 올림
+		 * 실제 그룹의 총갯수 = (페이지의 총갯수 / 한 그룹당 보여질 페이지 갯수) 올림
+		 * 
+		 * ex) 데이터가 70개
+		 * 	실제  페이지의 총 갯수 7
+		 *  	실제 그룹의 총 갯수 1
+		 * ex) 데이터가 88개
+		 *  	실제 페이지의 총 갯수 9
+		 *  	실제 그룹의 총 갯수 1
+		 * ex) 데이터가 134
+		 * 	실제 페이지의 총 갯수 14
+		 * 	실제 그룹의 총 갯수 2
+		 * 
+		 * 그런데 DB에 값을 줄때는  start_row와 end_row만 있다.
+		 * end_row = input_page_num * 10; //이건 임의값  1페이지 인경우
+		 * star_row = end_row-9 ; 
+		 * ex)데이터가 134이면  실제 들어오는 페이지의 값이 14이고 페이지그룹이 2일 경우;
+		 * 		end_row = 140;
+		 * 		start_row = 131;
+		 *	여기서 실제 끝은 134이고 
+		 *	실제 시작은 131부터 되어야 한다.
+		 * 
+		 * real_end_row = 전체 row가 실제 end row값이 될것이다.
+		 * 그런데 문제는 여기서 실제 시작을 구해야한다.
+		 * 실제 시작을 구해야하니까 위에 틀린 공식에서 시작값을 가지고 오면 되겠다.
+		 * 
+		 * 정리
+		 * 즉 계산을 2번 해야 한다. 
+		 * 먼저 틀린 값으로 해서 start_row를 구하고 end_row값과 실제_end_row값을 비교해서
+		 * 같다면 그대로 end_row값 틀리다면 실제_end_row값을 출력하면 되겠다.
+		 * 
+		 * 아래에 표시할 페이지에 대해서 계산해야한다.
+		 * 실제 페이지의 총 갯수(end_page)와 가상 end_page값도 구해야한다.  
+		 * ex) 데이터가 134이고 들어오는 페이지 값이 5이고 페이지그룹이 1일 경우;
+		 *	 	end_page = 10;  페이지 그룹 *10
+		 *		start_page = 1; 엔드페이지 -9
+		 *	 여기서도 실제 끝이 다를 수가 있다.
+		 * ex) 데이터가 134이고 들어오는 페이지 값이 14이고 페이지그룹이 2일 경우;
+		 *		end_page = 20; 페이지 그룹 *2
+		 *		start_page = 11; 엔드페이지 -9
+		 *
+		 *	실제 페이지 끝은 14 
+		 * 	real_end_page = 실제 페이지의 총 갯수=(실제 총 row 갯수 / 한 페이지당 보여질row 갯수) 올림
+		 *  으로 하면 된다.
+		 *  그리고 여기서 만약 끝값(page)이 실제 끝값보다 크거나 같다면 next는 없어야한다.
+		 *  
+		 *  ex) 데이터가 140이고 들어오는 페이지는 14 이고 페이지 그룹이 2일 경우
+		 *  	end_page = 20;
+		 *  	start_page= 11;
+		 *  	real_end_page = 14;
+		 *  	
+		 *  	end_row = 140; 
+		 *  	start_row= 131;
+		 *  	real_end_row = 140;
+		 *  
+		 *  ex) 데이터가 200이고  들어오는 페이지는 20이고 이지 그룹이 2일 경우
+		 *   	end_page= 20;
+		 *  	start_page= 11;
+		 *  	real_end_page= 20;
+		 *  
+		 *  	end_row = 200;
+		 *  	start_row = 191;
+		 *  	real_end_row = 200;
+		 *  
+		 *  그럼 next까지는 해결이 되었는데 prev 버튼은 어떻게 해야 할까?
+		 *  간단하게 생각하면 그룹번호가 1보다 크다면 이전 버튼이 무조건 존재하도록 하면 될거 같다.
+		 *  
+	 	 *  정리
+		 *  실질적으로 계산 되는 값은 위에 6가지 이고
+		 *  생각해보면 화면에서 보이는 것은 
+		 *  1. row 범위값 = DB조회한 값
+		 *  2. 아래 페이지 값 = 숫자만 표시함
+		 *  숫자만 표시하는 것은 굳이 DB에 갈 필요가 없다.
+		 *   
+		*/
+정리
+받아오는 값
+뷰에서 받아오는 값 -- 두가지를 모두 받을 수도 있고 한가지만 받을 수도 있다.
+  1.now_page = 현재 페이지 번호
+  2.now_group = 현재 페이지 그룹번호
+
+DB에서 조회해 오는 값-- 실제 end row
+  3.db_select_all_count = DB에서 조회한 실제 row끝 =real_end_row
+
+내가 셋팅해주는 값
+  4.page_per_row = 한 페이지에 표시할 row 
+  5.group_per_page = 한 그룹당 표시할 page
+
+위에 5개의 값으로 계산을 한다.
+
+
+리턴 값 6개 - 실제 필요한 리턴 값은 4개 이지만 확실한 start부분을 계산하기 위해서 다음과 같은 값들이 필요하다.
+로우값
+  1.end_row = 현재 페이지의 번호 * 한 페이지당 row;
+  2.start_row = end_row - (한 페이지당row-1);
+  3.real_end_row =  DB에서 조회한 실제 row끝
+  조건문 여기서 end_row가 더 크다면 real_end_row 값으로 바꿔준다.
+	
+페이지 값
+  4.end_page = 현제 그룹번호 * 한 그룹당 page;
+  5.start_page = end_page - (한페이지당row-1); 
+  6.real_end_page = Math.ceil(  DB에서 조회한 실제 row끝 / (소수점 형변환)한 페이지당 row )
+  조건문 여기서 end_page가 더 크다면 real_end_page 값으로 바꿔준다.
+
+이렇게 값이 계산되었다면
+DB에서 rownum과 서브쿼리를  활용해서 화면에 출력시킬 데이터를 where 조건절에 준다.
+그래서 여기서는 start_row와 end_row값을 준다.
+
+기본값 세팅은 vo에서 하지 않고 service에서 했다.
+
+궁금증
+만약에 화면에서 now_page랑 now_group을 받아야하는데
+기존에 목록 화면에 있는 form태그와 별도로 form태그를 설정해서 사용가능한지 여부--- 동적 폼테그 작성하면 된다.
+input태그의 name값이 자동으로 컨트롤러 매개변수 vo에 셋팅이 된다.(쿼리스트링으로도 vo컬럼만 맞추면 가능)
+vo가 여러개 라면 여러개 vo에 자동으로 셋팅이 되는건가 --- 생각을 해보니까 되더라도 그렇게 사용하면 유지보수나 버그가 발생할 것 같다
+
+
+/*페이지 최종 정리
+ ***페이지 처리시 가장 먼저 생각할 것은 클라이언트로 부터 넘어오는 값이다.
+ * 	 1)	now_page
+ *	 2)	now_group
+ *  값을 넘겨 받는다.
+ *  그런데 여기서도 생각을 해야 할게 
+ *  첫 화면은  둘다 null 값으로 넘어온다.
+ *  그래서 조건문으로 둘다 1로 셋팅해야한다.
+ 
+ *** 두번째 화면 부터는 page를 클릭하면
+ *  now_page, now_group를 같이 컨트롤러로 넘긴다.
+ *** 이전 버튼과 다음버튼
+ * 	1번방법
+ * 		now_group 값만 넘어온다.+1-1
+ * 		now_page는 null값을 넘겨받도록 했다.
+ * 		서비스단에서 처리
+ *		조건문으로 now_page가 null인 경우
+ *		now_page = now_group * group_per_pages - (group_per_pages-1)  
+ *		그런데 조심해야 하는게 위에 초기화에서 클라이어트에서 넘어오는 값이
+ *		둘다 null인 케이스가 있기 때문에 조건문을 생각해서 걸어야 한다.
+ *
+ * 	2번방법
+ * 		now_page 값도 같이 컨트롤러로넘기는 방법
+ * 		다음버튼	
+ * 		now_group+1 이고 now_page = ((now_group+1)*group_per_pages)-(group_per_pages-1) 
+ * 		이전버튼
+ * 		now_group-1 이고 now_page = ((now_group-1)*group_per_pages)-(group_per_pages-1)
+	 *** VO및 셋팅
+ *	우리가 정해야하는것 
+ * 		page_per_rows = 한 페이지당 데이터 수
+ * 		group_per_pages = 한 그룹당 페이지 수
+ * 
+ * 	DB조회값
+ *  	real_end_row = DB에 select_count_all 값
+ * 
+ * 	클라이언트에서 넘어오는 값
+ * 		now_page;
+ * 		now_group;
+ * 	
+ * 	계산을 위한 값
+ * 	1번 실제 계산되서 SQL쿼리를  실행하기 위한 값 
+ * 		end_row = now_page * page_per_rows;
+ * 		start_row = end_row - (pager_per_rows-1);
+ * 		real_end_row = DB select_count_all 값;
+ *  
+ *  	end_row > real_end_row 다면 
+ *  	end_row = real_end_row 로 셋팅 하고 DB 보낸다.
+ *  
+ *  2번 계산되어 화면 아래 표시하기 위한 값
+ * 		end_page = now_group * group_per_pages;
+ * 		start_page = end_page - (group_per_pages-1);
+ * 		real_end_page = Math.ceil(real_end_row/(float)page_per_rows) ;
+ * 	
+ * 		end_page > real_end_page 다면	
+ * 		end_page = real_end_page
+   
+ *** SQL 쿼리
+ * 설명 : 일단 서브쿼리를 3번 사용한다.
+ * 		정렬먼저, rownum으로 셀렉, 셀렉 조건문
+ * 		rownum에 별칭을 달아서 마지막 셀렉 조건문에서 사용하도록 한다.
+ * 
+ * 	이건 내가 쉽게 이해를 위해 문법과 상관없이 풀어쓴 것
+ * 	select * from kjhboard as t1 order by desc
+ *	select (rownum as ronum, 칼럼들) from t1 as t2
+ *	select  * from t2 where ronum between 10 and 20;
+ *
+ */
+
+/* 요약하기
+ * list<DB조회된 VO>와 pvo(now_page, now_group, start_page, end_page)값을
+ * 보내서 그 값으로 화면을 출력한다.
+ * 	
+ * 	최초 매개변수와 리턴(서버입장)
+ *  	최초 클라이언트에서 받는 값 ::: now_page = null, now_group = null
+ * 	1로 셋팅하고 셋팅값으로 계산 후에 
+ * 	클라이언트에 주는 값 ::: list<DB조회된 VO>와 pvo(now_page, now_group, start_page, end_page)
+ * 
+ * 	 클라이언트 쪽에서 실행되는 이벤트 2가지(페이지기능에서)
+ * 	1. 페이지 버튼 클릭
+ *  	2. 이전이나 다음 클릭
+ * 	그럼 여기서 셋팅되어야 하는게 
+ * 	page를 클릭했을 때 서버로 넘기는 값::: 
+ * 	now_page, now_group 두가지 값을 넘길지 now_page만 넘길지 
+ * 	이전이나 다음 클릭시 서버로 넘기는 값:::
+ *  	now_group, now_page 두가지 값을 넘길지 now_group만 넘길지
+	 * 	두번째 부터 매개변수와 리턴(서버입장)
+ * 	클라이언트에서 받는 값 :::  상황에 따라
+ * 	now_page = 숫자, now_group = 숫자 ||now_page = 숫자, now_group = null || now_page = null, now_group = 숫자
+ * 	vo에 셋팅하고 계산하고 
+ *  	클라이언트에 주는 값 ::: list<DB조회된 VO>와 pvo(now_page, now_group, start_page, end_page)
+
+		
+		// 방금 든 생각을 말로 정리
+		// 클라이언트에서
+		// 1. 페이지 버튼을 누를 때 마다 now_group과 now_page를 동시에 주도록한 경우는
+		//  page_first_start에서 (초창기 1,1 값 셋팅하기위한)
+		//  if문에서 now_group의 null만 체크했다.
+		// 
+		//  그리고 페이지 버튼을 누른경우는 다른것들 안걸치고
+		//  calculator실행
+		//  넥스트버튼이나 이전 버튼의 경우 page값이 null 
+		//  결론 ::: 위의 경우는 조건을 3가지만 건다.
+		// 			초기화 제외하고 메서드 3가지		
+
+		// 2. 페이지 버튼을 누를 때 now_page만 주도록한 경우는
+		//  page_first_start에서 (초창기 1,1값 셋팅하기위한)
+		//  if now_page과 now_group가 모두 null인 경우만 체크한다.
+		// 
+		//  결론 ::: 위의 경우는 조건을 4가지 건다.
+		// 	 	   아래에 매서드를 하나더 추가해준다.
+		 		   
+		
+		// 페이지버튼을 눌럿을때 그룹이 null만 나올때
+		// public PageVO click_page_btn(PageVO pvo) {  
+		   if(pvo.getNow_group() == null || pvo.getNow_group() == "") {
+		//	1페이지면 1그룹  1~10   올림(페이지 / (float)그룹당 페이지)   
+		//	11페이지면 2그룹 11~20  올림(페이지 / (float)그룹당 페이지)
+			int now_page = Integer.parseInt(pvo.getNow_page());
+			int group_per_pages = Integer.parseInt(pvo.getGroup_per_pages());
+			int now_group= (int) Math.ceil((now_page/(float)group_per_pages));
+			pvo.setNow_group(String.valueOf(now_group));
+		}
+	}
+--------------------------------------------------------------------------------------------------------------------------------------------------
+파일 업로드 작업 시작
+MultipartFile 에서 . getOriginalFilename
+
+파일 업로드 기능
+참조 파일업로드에서 취약점
+https://owin2828.github.io/devlog/2020/01/09/etc-2.html
+참조 파일업로드 작업
+https://ktko.tistory.com/entry/Spring-%EB%8B%A8%EC%9D%BC%ED%8C%8C%EC%9D%BC-%EB%8B%A4%EC%A4%91%ED%8C%8C%EC%9D%BC-%EC%97%85%EB%A1%9C%EB%93%9C%ED%95%98%EA%B8%B0
+첨부파일의 삭제 작업의 최대 고민은 사용자가 비정상적으로 부라우저를 종료하고 나가는 행위
+해결책은 spring-batch나 quartz 라이브러리 사용하는 것(스프링 스케줄러를 사용하는 것)
+
+클라이언트 입장에서
+파일 업로드이고
+파일 다운로드도 클라이언트 입장에서 다시화면에 띄워서 표시할 때 다운로드를 사용한다. 
+
+
+
+파일업로드 환경설정
+1.일단 pom.xml에 라이브러리 추가
+<dependency>
+			<groupId>commons-fileupload</groupId>
+			<artifactId>commons-fileupload</artifactId>
+			<version>1.3.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId> 
+			<version>2.5</version>
+		</dependency>
+
+2.servlet.xml에서 환경 설정 multipartResolver 를 bean으로 등록
+3.클라이언트화면에서 form 태그 설정- enctype 그리고 자바스크립트로 유동적 html생성 
+
+파일업로드 컨트롤러 
+1. 일단 상수로 파일 저장될 경로를 선언해준다.
+2. 일단 업로드 컨트롤러에서 multipart Request를 매개변수로 받는다.
+3. 파라미터를 받아서 map에 저장한다. (multipart Request.getgetParameterNames(); return Enumeration;)
+4. 파일업로드 프로세스를 실행해서 나온 결과값 List(파일이름)를 맵에다가 저장한다.
+5. map을 modelAndView에 담아서 보낸다.
+
+파일업로드 프로세서(매개변수 multipartRequest) return List<파일이름>
+1. multipart Request에  객체에 저장되어 있는 파일 이름을 가지고 온다. Iterator iterator=multipart Request.getFileNames();
+2. 이터레이터를 돌리면서 
+3. 파일태그이름을 가지고 온다. 이터레이터.next();
+4 . multipart Request에  객체에 있는 파일태그이름을 가지고 와서 MultipartFile객체에 담는다. multipart Request.getFile("파일이름");
+5. MultipartFile객체에 있는 본래파일이름을 얻는다. MultipartFile.getOriginalFilename();
+6. 본래 파일이름은 List에 담는다.
+7. 저장경로에  파일이름으로 파일 객체를 생성한다.-- 여기서 실제 컴퓨터에 파일이 생성되는 것이 아니다. 
+/*			File 인스턴스를 생성했다고 해서 파일이나 디렉터리가 생성되는 것은 아니라는 것이다.
+			파일명이나 디렉터리명으로 지정된 문자열이 유효하지 않더라도 컴파일 에러나 예외를 발생시키지 않는다.
+			새로운 파일을 생성하기 위해서는 File 인스턴스를 생성한 다음, 출력스트림을 생성하거나 createNewFile()을 호출해야 한다.
+
+			1 이미 존재하는 파일을 참조할 때
+			File f = new File("c:\\jdk\\work\\ch14", "File1.java");
+
+			2. 기존에는 없는 파일을 새로 생성할 때
+			File f = new File("c:\\jdk\\work\\ch14", "File2.java");
+			f. createNewFile(); //새로운 파일이 생성된다.
+*/
+7. 멀티파트파일에 파일이 있는지 여부 체크한다 multipartFile객체.getSize(); 객체가 있다면
+8. 파일이 존재하는지 여부를 판단한다. 없다면 디렉토리와 파일 을 생성한다.
+9. 임시로 저장된 multiFile을 실제파일로 저장한다. 대상파일이 존재한다면 삭제하고 삽입한다. m.file.transferTo(new File( "경로") )
+
+-------------------------------------------------------------------------------
+썸네일- 썸네일 라이브러리 추가
+pom.xml에 썸네일 라이브러리 추가
+<dependency>
+			<groupId>net.coobird</groupId>
+			<artifactId>thumbnailator</artifactId>
+			<version>0.4.8</version>
+		</dependency>
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+중요한건
+리퀘스트에 getFile("파일태그이름") 으로 MultipartFile을 구한다.
+MultipartFile 객체에서 originfile name을 구한다.
+MultipartFile.transferTo( new File("경로 + 오리진파일네임"));
+으로 한다는게 중요하다
+
+---------------------------------
+멀티파트리퀘스트에서 get파일네임즈로 이터레이터 가지고 와서
+리퀘스트 객체에 저장되어 있는 파일태그이름 구하고 
+멀티파트리퀘스트.getFile("파일태그이름"); 으로 멀티파트파일 객체를 구한다.
+멀티파트 객체에 있는 실제 파일 이름을 가지고 온다.
+그 다음 file객체를 저장경로로 만든다.
+
+그다음 멀티파트파일 객체의 null 체크를 하고 null이 아니면
+file 객체로 경로까지 폴더를 생성하고
+펄티파트 파일 객체.transTo(new File("저장경로+실제파일이름"))
+------------------------------------------------------------------------
+서버 컴퓨터에 있는 이미지 파일 읽어 와서 클라이언트 화면에 표시하기
+// <imgsrc="${contextPath}/download?imageFileName=${imageFileName}"> 로
+쿼리스트링으로 컨트롤러에 넘어갔다가 값을 표시한다.
+
+@RequestParam("imageFileName") String imageFileName
+--@RequestParam
+--클라이언트 화면에서는 img태그가 실행되기 전에 jsp화면에 뜨고
+--img 태그는 컨트롤러를 실행시킨다.
+--결과 화면에서 태그이름으로 이미지파일 이름을 받아온다. ( 그전 컨트롤러서 map.file_list 객체를 보냈기에 그걸로 구한다.)
+--즉 jsp에 map 객체에 파일이름이 담겨져 있기때문에 그 파일이름을 받아서 사용한다.
+--
+OutputStream response로 뽑아낸다. 
+--출력스트림으로 
+response.setHeader
+response.addHeader
+
+FileInputStream input  = new fileinputstream(file);
+//파일인풋스트림의 생성자 매개변수로 file 객체를 받는다.
+버퍼를 만들어 놓는다.
+인풋스트림.read(buffer)//인 풋스트림으로 버퍼를 읽어 온다.
+outputStream.write(buffer,0,end)로 버퍼를 출력한다.-- 바이트 배열을 0~end까지 출력한다.
+
+-------------------------------------------------------------------------
+썹네일 사용 (매개변수로 imageFileName 을)
+OutputStream response로 뽑아낸다.
+imageFileName으로 파일경로를 구한다.
+file(파일경로)로 객체를 구한다. 
+
+String index랑 subString으로 파일 이름을 구하고
+썸네일 파일을 저장하기 위한 File객체를 만든다(썸네일을 저장할 경로)
+이미지 파일이 존재하는지 여부를 체크하고 있다면
+썸네일저장하기위한 파일 객체를 통해서 폴더를 생성한다.
+Thumbnails.of(imagefile).size(50, 50).outputFormat("png").toFile(thumbnail);
+로 썸네일 파일을 생성해서 저장한다.
+
+input스트림으로(섬네일파일)로 만든다.
+버퍼를 만들고 인풋스트림.read(버퍼) // 만들어진 인풋스트림을 버퍼로 읽어 들어 온다.
+아웃풋 스트림.write(버퍼) 로 버퍼를 출력한다.
+
+------------------------------------------------------------------------
+이미지 파일 출력하는 최종 정리--매개변수로 파일 이름을 받아왔는데. 이것은 jsp에 파일이름에 대한 정보가 담겨있기때문에 가능하다.
+아웃풋스트림을 구한다.
+파일객체 2가지를 구한다. -- 원본이미지파일, 썸네일파일
+원본이미지 파일
+--파일 저장경로 +매개변수로 받은 파일 이름
+
+썸네일 파일객체
+--파일이름에서 파일확장자를 제거한다.
+--그다음 썸네일 파일객체를 썸네일 저장경로+파일이름+.png 로  썸네일 파일객체를 만든다.
+
+이미지파일이 있다면 썸네일파일 객체에 폴더들을 만들고 
+썸네일을 생성한다.
+
+파일인풋스트림을 생성한다. 생성자로 썸네일 파일객체를 준다.
+
+그다음 출력한다.
+--------------------------------------------
+글쓰기 완료후 어차피 글 상세창으로 보내도록 한다.
+글쓰기시 완료된 글번호를 받아와야 파일 업로드를 할때 파일에 대한 업로드폴더를 생성할 수 있다.
+
+-------------------------------------------------
+current request nor type같은 에러는 multipart는 method='post'여야 한다. 멀티파트 리졸버랑 컨트롤러 확인
+계속  400에러가 뜨고  form데이터가 뜨는 이유는 다양한 이유가 있지만 다음과 같다.
+컨트롤러에서 매개변수로 vo객체를 받아서  폼태그에 인풋태그 값을 가지고 왔는데... get일 때만 가능하다
+멀티파트는 post일떄만 작동하는데 그래서 두가지가 충돌한것이다.
+
+----------------------------------------------------------
+문제 발생
+쿼리에서 인서트를 하고 글번호를 가지고 와야하는데 리턴은 글번호가 아니라 int 1~0인데 
+글번호를 조회를 어떻게 하지?
+
+1. 글번호를 자체를 select로 max글번호로 글번호를 조회해서 그값을 다시 인서트 시켯는데
+2. selectkey사용법
+https://joo-dev.tistory.com/2
+https://roqkffhwk.tistory.com/180 
+<insert id="insertSelectSeq" parameterType="com.model.Test">
+ INSERT INTO seq_test(idx,title) 
+   VALUES(idx_test_seq.nextval,#{title}) 
+ <selectKey keyProperty="idx" resultType="Integer" order="AFTER">
+   SELECT idx_test_seq.currval FROM dual 
+ </selectKey>
+ </insert>
+
+3.keyproperty 사용법 -- https://slowmonk.tistory.com/77
+
+2번 방법으로 하였다. 
+
+
+-------------------------------------------------------------------------
+ResponseEntity 사용법 정리 해더 와 바디 값 셋팅
+ResponseEntity는 @ResponseBody 어노테이션과 같은 의미로, ResponseEntity를 return Type으로 지정하면 JSON (default) 또는 Xml Format으로 결과를 내려준다.
+ ResponseEntity를 사용하여 반환되는 Response의 Header의 HTTP Status Code를 직접 제어할 수 있었다.
+참조 
+https://devfunny.tistory.com/321
+
+---------------------------------------------------------------------------------
+여기서 이제 파일 업로드 작업을 해야한다.
+ 글쓰기 와 파일 업로드를 따로 해야하나
+기존방식 순서
+일단 multipartRequest 객체를 받아서 
+그걸로 kbvo에 셋팅을 하고 service로 넘긴다.-- 이미지는 이미지 vo에 넣어서 보내자
+service에서는 일반 글 인서트하고 해당 글번호를 가지고 와서 다시 셀렉트한다.
+
+여기서 어떻게 할까? 
+인반 글 인서트를 먼저하고 해당 글번호와 이미지 파일 네임으로 
+이미지 vo에 넣어서 이미지테이블에 인서트한다.
+이미지테이블에 인서트를 했으면 마찬가지로 해당 인서트한 결과값을 이미지 vo에 담아서 나오도록한다.
+위에 해당 정보들을 활용해서 업로드를 작동시킨다.
+
+파일 업로드는 그냥 글번호로 폴더를 만들고 저장하자
+
+
+--------------------------------------------------------------------------
+jsp 파일내부에서 선언되어있던 자바 변수들은  form태그로 전송하면 
+같이 넘어가는 건가? 아니면 사라지는 건가? // 사라진다.
+
+------------------------------------------------------------------------------
+상세 글 만드는게 좀 복잡하다.
+정리를 하자면 글 상세 페이지로 가는 경우의 수는 4가지
+1. 글을 눌러서 들어가는 경우 -- 글의 b_num 태그 값 받아오기
+2. 글쓰기 완료 후 상세페에지 -- 글쓰기 완료 후 b_num 받아오기
+3. 댓글을 달았을 경우 
+4. 대댓글을 달았을 경우
+
+그래서 컨트롤러에서 잘 처리해야한다. 
+일단 맨처음에 해당 글을 조회해야 하니까   b_num값(글번호)는 무조건 필요하다.
+그리고 중요한 것 중에 하나가 ajax로 비동기로 처리하는 것이 맞지만
+나는 학습을 위해서 동기화로 처리하였다.
+
+-------------------------------------------------------------------------------------
+그렇게 처리를 하다 보니까 detail 컨트롤러에서 모든 값을 조회해서 
+detail.jsp로 보내야 한다. 
+즉 해당 글조회, 해당 글이미지 조회, 해당 댓글 조회, 해당 대댓글 조회
+이 모든 것을 실행하고 detail.jsp로 보낸다.
+-----------------------------------------------------------------------------
+대댓글 
+입력창이 한번 클릭하면 뜨긴 뜨는데
+문제는 한번 더 클릭했을 시 사라져야 하는데 
+어떻게 하는 것인지?
+해결 :::
+처음에는 JS로 클릭 이벤트를 주면서  <tr onclick="reply_re_form(); this.onclick=null;">  이렇게 해주면서 한번 클릭만 실행되게 하였다.
+그런데 한번 더 클릭했을 때 사라져야 하니까 ㅋ 아무태그 하나를 만들어서 hidden 속성을 주고 거기에 click값을 주도록 했다.
+그래서 클릭시 마다 값이 +1 되고  그 값을 나누어서 음수 인지 양수 인지 여부를 판단해서 태그들의 hidden 값을 조정 하였다.
+
+문제 : 해당 댓글을 클릭 했을 때만 실행하기
+jsp에서 for문을 돌릴 때 마다  반복변수 i를 이용해서 태그의 name과 id값을 셋팅해서 각 댓글마다 고유 이름을 지정하였다.
+onclick 이벤트도 i를 매개변수로 받아서 js함수를 만들때 사용하였다.
+
+ 참조 https://m.blog.naver.com/nuberus/221463728867 
+
+-----------------------------------------------------------------------------
+대댓글 조회
+
+글번호 b_num, 댓글번호 c_num , 대댓글 번호c_c_num
+일반 댓글은 c_num 이 있고 c_c_num은 0이다.
+대댓글은 c_c_num이 있다. 
+
+ 댓글 조회
+ select * from  where b_num= #{b_num} and c_c_num =0  중에서 c_num으로 정렬 
+대댓글 조회
+slelect * form  where b_num = #{b_num} and c_num = #{c_num} and c_c_num이 0보다 큰 값들 중에서 c_c_num으로 정렬
+
+일단 댓글입력할때 
+글번호, 댓글번호(자동생성), 대댓글 번호=0
+
+대댓글 입력할때
+글번호, 댓글번호, 대댓글 번호 = 자동생성한다.
+  
+그리고 LIST에 LIST를 넣은 2차원 LIST로  대댓글을 조회한 것을 넣고 돌린다. 이유는 댓글에 대한 대댓글LIST 이기 떄문에
+MAP으로 해도 되겠지만 LIST를 그냥 사용 하였다. 
+ 
+-----------------------------------------------------------------------------
+폼태그의 위치 정리
+table 태그 밖에 form태그나 
+td태그 내부에 form태그
+---------------------------------------------------------------------------
+화면 이동과 데이터에 관해서 정리
+
+컨트롤러 -> jsp는  request 객체가 공유하는데 
+jsp -> 컨트롤러 는 request 객체가 공유하지 않는다.
+
+jsp -> 컨트롤러 -> jsp 로 이동시 데이터를 넘기기 
+
+컨트롤러에서 매개 변수를 아무 것도 받지 않고 넘기니까  오류남
+컨트롤러에서 매개 변수로 request 받고 넘겨도 오류남
+
+@RequestParam 사용
+화면에서 사용한 태그 이름 
+https://elvis-note.tistory.com/entry/10-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EC%A0%84%EB%8B%AC%EB%B0%A9%EC%8B%9D-8-RequestParam  
+
+form 태그 내부에서
+버튼 이벤트로 location.href 를 사용하니까 화면이 이동하지않고 새로고침된다.
+form 태그 내부에서 this를 해도 form태그가 선택되는게 아니라 document가 선택된다.
+----------------------------------------------------------------------------------------
+글 수정
+
+컨트롤러에서 매개변수로 vo를 받아서 자동셋팅값을 받을려고 했다. 
+글에서 이미지가 있기 때문에 
+
+multipart/form-data 로 받아서
+boardVO 와 imageVO에 셋팅해서
+두개의 테이블을 모두 업데이트 시킨다.
+방법은 여러게 있겠지만 이렇게 하자.
+-------------------------------------------------------------------
+내 프로젝트 외부에서 접근하기
+
+cmd ipconfig
+에서 기본 게이트웨이 값 을 주소창에 입력 하면 설정창이 뜬다.
+
+1.고정 아이피 사용체크하고 
+이건 공유기에 달려있는 비밀번호011*****
+ 외부 ip주소 : 내 ip ***** (네이버에서 치면 된다.)
+
+기본 게이트 웨이는 외부 ip 주소에서 마지막 숫자를 1로 바꿔준다.
+
+서브넷 마스크는 255.255.255.0 으로 기본으로 셋팅 해주고 
+DNS서버는 일단 건드리지 않는다.
+그렇게  고정 IP(외부)와 내부 IP셋팅이 끝나면
+
+2.nat/라우터  설정
+포트포워딩 설정 (DMZ나 다른 설정이 있지만 보안에 매우 취약하다. 즉 모든 포트를 다 열어버린다.)
+- 외부에서 접속시 어떤 내부 포트와 연결할지 셋팅한다.
+
+3. 방화벽에서 인바운드 규칙을 설정한다.
+
+참조
+https://kamang-it.tistory.com/entry/JSP%EB%82%B4-%EC%9B%B9%EC%84%9C%EB%B2%84-%EC%99%B8%EB%B6%80%EC%97%90%EC%84%9C-%EC%A0%91%EA%B7%BC%ED%95%98%EA%B8%B0
+https://qortn.tistory.com/202
+https://4sii.tistory.com/3
+
+ip차단 및 추적
+https://blog.naver.com/siwoo9999/90170092153
+
+바당화면에 사진 있음
+
+----------------------------------------------------------------------------------------------------------------------------------
+문제 발생
+이미지 테이블 업데이트를 하면서 생긴 문제
+이미지 테이블에서 
+인서트할때도 다중 이미지가 들어오면 그 해당 이미지에 대한 칼럼은 DB에 하나만 있다.
+
+방법은 2가지가 있을것 같은데 
+1. imgename인 하나의 DB칼럼에 구분자로 여러 개 저장하는 것을 할지?
+2.여러 개의 row로 하는게 좋을지
+-----------------------------------------------------------------------------------------------------------------------------------------
+그리고 이미지에 이미지 번호를 주었는데 생각을 해보면 
+따로 이미지 번호를 주지 않고 b_num으로 값을 조회하면 될거 같다
+------------------------------------------------------------------------------------------------------------------------------------------
+public List<ImageVO> imagevo_setting(MultipartHttpServletRequest multipartRequest, String b_num)
+			throws IllegalStateException, IOException {
+		List<ImageVO> imageVO_list = new ArrayList<ImageVO>();
+		//ImageVO imagevo = new ImageVO(); 
+		Iterator iterator = multipartRequest.getFileNames();
+		while (iterator.hasNext()) {
+			String file_name = (String) iterator.next();
+			List<MultipartFile> mulpart_file_list = multipartRequest.getFiles(file_name);
+			for(MultipartFile multipartfile : mulpart_file_list) {
+				ImageVO imagevo = new ImageVO();
+				String real_file_name = multipartfile.getOriginalFilename();
+				imagevo.setImage_file_name(real_file_name); // vo에 담는것
+				imagevo.setB_num(b_num);
+				imageVO_list.add(imagevo);
+			}
+	}
+		return imageVO_list; // realFileName을 셋팅해서 값을 넘긴다.
+	}
+여기서 ImageVO 객체를 위에서 공유하고 반복문에서
+ImageVO.setAttribute() 했는데 이렇게 하니까 마지막 최종 setAttribute값으로만 list에 셋팅이되었다.
+왜 일까?
+이게 보니까 이중 반복문에서 위에 객체를 선언하니까 그렇고
+일차원 반복문에서는 위에 객체를 선언해도 상관이 없다.
+
+일차원 반복문에서 상위에 있는 객체를 가지고 와서 값을 셋팅하고 또 반복문을 돌때 다시 상위객체를 가지고 와서 돌린다.
+문제는 2중 반복문의 경우이다. 더 이상한 것은 선언하는데는 이상이 없다. 
+반복문은 반복문(선언)과 동등한 레벨에 있는 객체는 가지고 온다.  
+------------------------------------------------------------------------------------------------------------------------------
+반복문에 조건문 공부하기
+ 여기서 조건문 and와 or에 따라 전혀 다른 결과가 도출된다. 이거 확실하게 정리해야 안해깔린다.
+public List<ImageVO> image_update(List imagevo_list, MultipartHttpServletRequest multipartHttpServletRequest) {
+		
+		for(int i =0; i<imagevo_list.size(); i++) {
+			ImageVO imageVO=(ImageVO)imagevo_list.get(i);
+			if(imageVO.getImage_file_name()!=null&&imageVO.getImage_file_name()!=""&&imageVO.getImage_file_name().length()>0) {
+				log.info("::::::::::::::::::::::::::::::"+imageVO.getImage_file_name());
+				int result=boardDAO.image_update(imageVO);
+				if(result>0) {
+					file_upload(imageVO,multipartHttpServletRequest);
+					log.info("파일 업로드 실행 :::::: ");
+				}else {
+					log.info("DB에 입력 실패");
+				}
+			}else {
+				imagevo_list.remove(i);
+			}
+		}
+		int size= imagevo_list.size();
+		log.info(size+"");
+	return imagevo_list;
+	}
+-------------------------------------------------------------------------------------------------------------------------------------
+반복문 문제 DB에 칼럼에 같은 값들이 들어가 있어서
+조회를 하면 list로 나오게 되는데 이걸 하나만 출력하겠다.
+
+		List<ImageVO> imagevo_list = boardservice.select_image(b_num);
+			for (int i = 0; i < imagevo_list.size(); i++) {
+				ImageVO imageVO = imagevo_list.get(i);
+				ImageVO imageVO2 = imagevo_list.get(i+1);
+				String imagevo1=imageVO.getImage_file_name();
+				String imagevo2=imageVO2.getImage_file_name();
+				if(imagevo1 == imagevo2) {
+					imagevo_list.remove(i+1);
+				}
+			}
+
+	List<ImageVO> imagevo_list = boardservice.select_image(b_num);
+		String image_file_name = imagevo_list.get(0).getImage_file_name();
+		for (int i = 1; i < imagevo_list.size(); i++) {
+			String image_file_name2 = imagevo_list.get(i).getImage_file_name();
+			if(image_file_name.equals(image_file_name2)) {
+				imagevo_list.remove(i);
+			}
+		}
+해결 ::: 기준이 되는 0번 인덱스 값을 뽑아 놓고 
+그다음 for문을 돌리는데 1번 인뎃스 부터 돌리면서 값을 출력해서 비교 했다.
+그런데 이거 비교 알고리즘이 있을 것 같다. 
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+list 정리
+ArrayList가 훨씬 빠르다. 
+하지만 데이터의 추가/삭제가 빈번하다면 LinkedList가 훨씬 효과적이다.
+이와같이 처리하고자 하는 데이터에 따라서 어떤 데이터 스트럭쳐를 선택할지를 잘 판단하는 것은 대규모 시스템을 구축하는데는 필수적인 능력이다.
+배열은 길이가 불가변이다. 성능은 좋다.
+그래서 소규모 부품화에 자주 사용되는데 나같은 경우는 인풋아웃풋 스트림에서 buffer byte배열로 buffer에 크기를 정해서 사용했다.
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+그리고 메서드나 기능을 나는 여러가지 방법으로 구현을 하는 것을 했는데 (연습용으로)
+그런데 알고리즘 책에서는 그런 습관은 좋지 못한 습관이고 자주 쓰는 방법을 계속유지하는 것이 좋다고 했다. 
+그리고 코드를 라이브러리화 해서 필요시 그 기능을 바로 적용할 수 있게 하여서 도구보다 구현에 집중할 수 있게 
+하는게 좋다고 했다. 
+
+코드를 라이브러리화 할떄 주의 해야할게 매개변수로 vo를 받거나 할때 주의해야 한다.
+
+------------------------------------------------------------------------------------------------------
+@ModelAttribute("page")int page
+원래 도메인객체가 아닐 경우 값을 안담아 보내는데
+어노테이션을 쓰면 ( )안이 키 이고 값으로 셋팅 해서 보낸다.
+
+--------------------------------------------------------------------------------------------------
+포링키가 있는 곳에 
+DB트리거나 on DELETE CASCADE
+트리거와 on DELETE CASCADE는 같이 사용할 수 없다.
+
+테이블 성성 후
+ALTER TABLE 테이블명
+ADD CONSTRAINT 제약조건명
+  FOREIGN KEY (CHILD_테이블의_FK값)
+  REFERENCES MOTHER_테이블명(MOTHER_테이블의_PK)
+  ON DELETE CASCADE;
+-------------------------------------------------------------------------------------------------
+암호화에 대한 생각
+자바 시큐리티에서 암호알고리즘 지원 MessageDigest
+salt를 다른 보안이 강화된 곳에 두고 작업을 하는 것도 좋겠다.
+
+그런데 클라이언트에서 값이 넘어 올떄 이미 데이터에 대한 정보가 넘어와서 server에서 암호화 작업을 한다.
+즉, 서버에서 작업하고 DB에 입력되니까 DB에 안전성은 지킬 수 있으나 보안적인 측면은 부족한듯하다
+클라이언트에서 암호화작업을 한 값이 넘어오도록하면 되지 않을까?
+그게 더 암호화적인 측면에서 좋은 것 같다. 
+
+네트워크적인 보안을 강화 문자인증으로 하면 네트워크상에서 데이터가 갈취되었더라고
+키값이 다른 네트워크(폰과 서버)로 주고 받아서 좀더 안정적이다.
+-------------------------------------------------------------------------------------------
+
+컨트롤러 리턴 일때 
+일반 스트링
+/스트링
+redirect:/스트링
+redirect:스트링
+forward:스트링
+forward:/스트링
+차이점	
+
+------------------------------------------------------------------------------------------------------
+필터와 인터셉터
+필터= 서블릿 필터 
+인터셉터 = 스프링에서 필터와 유사한 역활을 하고 스프링 빈이 관리한다.
+
+URI설계가 필요하다.
+박 개발을 하다가 보니까 문제가 많았었는데. 역시 책에서 보니까 uri설계가 필요하다는 것을 알았다.
+URI설계에 따른 페이지를 만들고
+URI설계에 따른 컨트롤러를 만들고
+
+로그인 화면에서 input태그에 히든속성 name ="${_csrf.parameterName}" value="${_csrf.token}"
+csrf토큰은 스프링 시큐리티가 적용된 프로그램의 모든 post방식에는 csrf 토큰방식 적용
+위조방지 목적으로 특정 값의 토큰을 적용하는 방식
+
+이걸 이미지테그나 js로 다양한 URI를 몰래 추가해서 올리고 서버 관리자가 그걸 실행하거나 보는 순간 권한을 변경해서 해킹이 가능하다.
+이것도 내가 보안에서 생각한거랑 비슷한 문제인데 서버에들어오는 값을 검증하지않는 문제를 이용한 해킹이다.
+ 
+막는 방법은 referer해더 값을 체크하거나 REST방식인 PUT,DELETE를 고려해 볼수 있다.
+
+CSRF토큰은 서버에서 클라이언트에 데이터를 전송할 때 CSRF토큰을 전송하는 것이다. 그래서 사용자가 다시 요청했을 때
+ 서버 토큰값과 클라이언트에 토큰값을 비교해서 처리하는것
+
+bcript는 해시암호화하고 받는 쪽에서는 체크만 하고 되돌릴 수 없다.
+
+
+마이바티스에 resultmap을 사용하는 경우 1:다 관계인 경우
+
+
+memberVO에 내부에 LIST까지 있는경우 -즉 객체 내부에 객체가 있는 경우 
+하나의 쿼리로 작업 가능 하다
+
+
+ 
+
+-------------------------------------------------------------------------------
+스프링은 일종에 잘 짜여진 뼈대 라고 볼 수 있다.
+만약 이 뼈대가 없다면 뼈대를 만드는 작업부터 하나 하나 모두 만들어야하는데 실력에 따라서 많이 다른 결과물들이 나올 수 있다.
+하지만 그 뼈대위에서 작업을 하기 때문에 생산성이 높아지고 실수를 줄일 수 있게 되었다.
+
+스프링에 특징 3가지
+di
+ioc
+aop
+
+di를 통해서 ioc를 이룬다.
+의존성 주입을 springContext에 bean으로 등록해서 관리한다.
+개발자는 객체와 객체를 분리해서 개발하고 엮는 작업을 한다.
+
+aop는 횡단관심사로서 반복되는 작업을 분리해내서 모듈화해서 작업하는것 (보안,로그,트랜잭션)
+프록시 페턴으로 프록시가 targe객체를 감싸고 있고 target객체는 여러가지 메서드가 있다. 이 메서드들이 JOINPOINT이다.
+그래서 advice(aspect)는 어느 JoinPoint(메서드)와 결합할지 정해야 하는데 PointCut이라고 한다. 
+PointCut 설정 종류는 인터페이스,클래스,메서드,파라미터,어노테이션 에 설정할 수 있다.
+
+-------------------------------------------------------------------------------------------
+컨밴션에 대한 생각
+컨밴션을 인터페이스와 추상클래스를 활용하면 정의하기 쉽지 않을까?
+
+-------------------------------------------------------------------------------------------
+log4jdbc 설정
+https://www.leafcats.com/45
