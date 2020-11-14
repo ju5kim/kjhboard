@@ -43,22 +43,48 @@ function addrCheck(){
 	});				
 }
 </script>
+<script type="text/javascript">
+function main_go(){
+	location.href="/board/board_list"
+}
+</script>
 </head>
 <body>
 
 <h1>회원가입</h1>
 <form id="register_form" name="register_form" method="post">
-아이디<input id="m_id" name="m_id" type="text"><br>
-비밀번호<input id="m_pw" name="m_pw" type="text"><br>
-비밀번호확인 <input id="m_pwr" name="m_pwr" type="text"><br>
-이름<input id="m_name" name="m_name" type="text"><br>
-휴대폰<input id="m_phone0" name="m_phone0" type="text">-<input id="m_phone1" name="m_phone1" type="text">-<input id="m_phone2" name="m_phone2" type="text"><br>
-이메일주소<input id="m_email0" name="m_email0" type="text">@<input id="m_email1" name="m_email1" type="text"> <br><br>
-우편번호<input id="m_addr0" name="m_addr0"><br><input type="button" value="주소검색" onclick="addrCheck()" class="btn"/><br>
-주소<input id="m_addr1" name="m_addr1"><br>
-상세주소<input id="m_addr2" name="m_addr2"><br>
-<button onclick="regbtn()">가입</button><button>취소</button>
+<table>
+<tr> <td>
+아이디 <td><input id="m_id" name="m_id" type="text"><br>
+</tr>
+<tr> <td> 
+비밀번호 <td><input id="m_pw" name="m_pw" type="text"><br>
+</tr>
+<tr>
+<td>비밀번호확인   <td><input id="m_pwr" name="m_pwr" type="text"><br>
+</tr>
+<tr> <td>
+이름 <td><input id="m_name" name="m_name" type="text"><br>
+</tr>
+<tr>
+<td>휴대폰<td><input id="m_phone0" name="m_phone0" type="text">-<input id="m_phone1" name="m_phone1" type="text">-<input id="m_phone2" name="m_phone2" type="text"><br> </td>
+</tr>
+<tr>
+<td>이메일주소<td><input id="m_email0" name="m_email0" type="text">@<input id="m_email1" name="m_email1" type="text"> <br></td>
+</tr>
+<tr><td>
+우편번호 <td><input id="m_addr0" name="m_addr0"><br><input type="button" value="주소검색" onclick="addrCheck()" class="btn"/><br>
+</tr>
+<tr><td>
+주소<td><input id="m_addr1" name="m_addr1"><br></td>
+</tr>
+<tr><td>
+상세주소<td><input id="m_addr2" name="m_addr2"><br></td>
+</tr>
+</table>
+<button onclick="regbtn()"> 가  입 </button><button>취  소</button>
 </form>
-<button>메인화면으로</button>
+<br>
+<button onclick="main_go()">메인화면으로</button>
 </body>
 </html>

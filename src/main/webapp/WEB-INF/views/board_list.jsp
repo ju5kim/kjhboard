@@ -18,7 +18,7 @@
 		location.href = "/board/login_form"
 	}
 	function go_logout() {
-		location.href = "/board/logout"
+		location.href = "/board/logout";
 	}
 	function go_mypage() {
 		location.href = "/board/mypage"

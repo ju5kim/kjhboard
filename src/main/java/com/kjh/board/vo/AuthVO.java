@@ -1,7 +1,7 @@
 package com.kjh.board.vo;
 
 public class AuthVO {
-private String userid;
+private String m_num;
 private String auth;
 
 
@@ -10,16 +10,15 @@ public AuthVO() {
 
 
 public AuthVO(String userid, String auth) {
-	super();
-	this.userid = userid;
+	this.m_num = userid;
 	this.auth = auth;
 }
 
 public String getUserid() {
-	return userid;
+	return m_num;
 }
 public void setUserid(String userid) {
-	this.userid = userid;
+	this.m_num = userid;
 }
 public String getAuth() {
 	return auth;

@@ -5,7 +5,7 @@ import com.kjh.board.vo.KjhMemberVO;
 
 public interface MemberDAO {
 	 public int mem_insert(KjhMemberVO kvo);
-	 public String mem_select_m_num(KjhMemberVO kvo);
+	 public KjhMemberVO mem_select_m_num(KjhMemberVO kvo);
 	 public boolean mem_val_id(KjhMemberVO kvo);
 	 public String mem_select_all();
 	 public int mem_update(KjhMemberVO kvo);

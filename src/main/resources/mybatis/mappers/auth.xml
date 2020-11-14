@@ -3,6 +3,7 @@
       PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="mapper.auth">
+<!-- 
 <resultMap type="authmember" id="memberMap">
 <id property="userid" column="userid"></id>
 <result property="userid" column="userid"></result>
@@ -25,4 +26,5 @@ LEFT OUTER JOIN member_auth on
 tbl_member.userid= member_auth.userid
 where member.userid = #{user.id}
 </select>
+ -->
 </mapper>

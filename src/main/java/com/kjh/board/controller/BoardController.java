@@ -26,6 +26,9 @@ import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -93,8 +96,13 @@ public class BoardController {
 
 	// 로그아웃버튼 누르면 실행되고 이동
 	@RequestMapping(value = "/logout")
-	public String logout(HttpSession session) {
+	public String logout(HttpSession session) throws Exception {
 		session.removeAttribute("m_num");
+		
+//		
+//		LogoutConfigurer<HttpSecurity> logut=security.logout();
+//		logut.logoutUrl("/logout");
+//		logut.logoutSuccessUrl("forward:/board_list");
 		return "forward:/board_list";
 	}
 

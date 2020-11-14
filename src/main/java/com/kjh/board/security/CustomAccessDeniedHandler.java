@@ -1,4 +1,4 @@
-package com.kjh.board.accessDenied;
+package com.kjh.board.security;
 
 import java.io.IOException;
 

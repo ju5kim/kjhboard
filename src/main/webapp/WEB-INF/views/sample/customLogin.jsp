@@ -14,12 +14,14 @@
 		<c:out value="${logout}"></c:out>
 	</h1>
 	<%String requestAuthType = request.getAuthType();
-	System.out.println(requestAuthType);
-	System.out.println(request.getPathInfo());
-	System.out.println(request.getContextPath());
-	System.out.println(request.getQueryString());
-	System.out.println(request.getRequestURL());//외부경로
-	System.out.println(request.getRequestURI());//내부경로?
+	
+	System.out.println("sample customPage :::");
+	System.out.println("requestAuthType :::"+requestAuthType);
+	System.out.println("getPathInfo :::"+request.getPathInfo());
+	System.out.println("getContextPath :::"+request.getContextPath());
+	System.out.println("getQueryString :::"+request.getQueryString());
+	System.out.println("getRequestURL :::"+request.getRequestURL());//외부경로
+	System.out.println("getRequestURI :::"+request.getRequestURI());//내부경로?
 	
 	%>
 	<form method="post" action="/board/sample/admin">

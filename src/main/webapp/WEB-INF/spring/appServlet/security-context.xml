@@ -6,28 +6,24 @@
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
 	<bean id="customAccessDenied"
-		class="com.kjh.board.accessDenied.CustomAccessDeniedHandler">
+		class="com.kjh.board.security.CustomAccessDeniedHandler">
 	</bean>
 	<bean id="customLoginSuccess"
-		class="com.kjh.board.accessDenied.CustomAuthenticationSuccessHandler">
+		class="com.kjh.board.security.CustomAuthenticationSuccessHandler">
 	</bean>
 	<bean id="customUserService"
-		class="com.kjh.board.accessDenied.CustomUserDetailService">
+		class="com.kjh.board.security.CustomUserDetailService">
 	</bean>
-	<bean id="bcryptPasswordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"></bean>
+	<bean id="bcryptPasswordEncoder"
+		class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"></bean>
 
 
 	<security:http>
-		<security:intercept-url pattern="/sample/all"
-			access="permitAll" />
-		<security:intercept-url
-			pattern="/sample/member" access="hasRole('ROLE_MEMBER')" />
-		<security:intercept-url pattern="/sample/admin"
-			access="hasRole('ROLE_ADMIN')" />
-		<security:access-denied-handler
-			ref="customAccessDenied" />
-		<security:form-login login-page="/customLogin"
-			authentication-success-handler-ref="customLoginSuccess" />
+		<security:intercept-url pattern="/sample/all" access="permitAll" /> <!-- 다음과 같은 url이고 권한이 peritAll이면 허용해라 -->
+		<security:intercept-url pattern="/sample/member" access="hasRole('ROLE_MEMBER')" /> <!-- 다음과 같은 url이고 ROLE_MEMEBER이면  접속 성공 -->
+		<security:intercept-url pattern="/sample/admin"	access="hasRole('ROLE_ADMIN')" />
+		<security:access-denied-handler ref="customAccessDenied" /> <!-- 접근 거부면 다음과 같이 가라 -->
+		<security:form-login login-page="/login_form"	authentication-success-handler-ref="customLoginSuccess" default-target-url="/board_list"/>
 
 	</security:http>
 
@@ -35,7 +31,8 @@
 
 		<security:authentication-provider
 			user-service-ref="customUserService">
-			<security:password-encoder ref="bcryptPasswordEncoder"></security:password-encoder>
+			<security:password-encoder
+				ref="bcryptPasswordEncoder"></security:password-encoder>
 
 		</security:authentication-provider>
 

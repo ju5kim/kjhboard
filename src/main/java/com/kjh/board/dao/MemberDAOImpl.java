@@ -1,7 +1,8 @@
 package com.kjh.board.dao;
 
-import org.apache.commons.logging.impl.Log4JLogger;
 import org.mybatis.spring.SqlSessionTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +13,7 @@ import lombok.extern.log4j.Log4j;
 @Log4j
 @Repository
 public class MemberDAOImpl implements MemberDAO{
-
+	private static final Logger log = LoggerFactory.getLogger(MemberDAOImpl.class);
 	//@Autowired
 	//SqlSession sqlSession;	//아이바티스
 	@Autowired
@@ -22,6 +23,7 @@ public class MemberDAOImpl implements MemberDAO{
 	@Override
 	public int mem_insert(KjhMemberVO kjhmemberVO) {
 	int result=sqlsessionT.insert("mapper.member.mem_insert", kjhmemberVO);
+	sqlsessionT.insert("mapper.member.insert_member_auth", kjhmemberVO);
 		return result;
 	}
 	// kvo에 id 값을 활용해서 DB에 이미 id값이 있는지 여부를 판별하는 DAO
@@ -34,12 +36,12 @@ public class MemberDAOImpl implements MemberDAO{
 		return false; // 통과하지 못한것
 	}
 	
-	//로그인
-	// id와 pw를 조회해서 m_num이 있는지 여부 판별, 세션에 값을 주기 위해서
+	//로그인 id와 pw를 조회해서 m_num이 있는지 여부 판별, 세션에 값을 주기 위해서
 	@Override
-	public String mem_select_m_num(KjhMemberVO kjhmemberVO) {
-		String result = sqlsessionT.selectOne("mapper.member.mem_select_m_num", kjhmemberVO);
-		return result;
+	public KjhMemberVO mem_select_m_num(KjhMemberVO kjhmemberVO) {
+		kjhmemberVO=sqlsessionT.selectOne("mapper.member.mem_select_m_num", kjhmemberVO);
+	
+		return kjhmemberVO;
 	}
 	
 	//마이페이지에서 나의 회원값

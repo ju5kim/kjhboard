@@ -1,5 +1,10 @@
 package com.kjh.board.vo;
 
+import java.util.List;
+
+import lombok.Data;
+
+@Data
 public class KjhMemberVO {
 	private String m_num;
 	private String m_id;
@@ -11,12 +16,14 @@ public class KjhMemberVO {
 	private String m_reg_date;
 	private String m_update_date;
 	private String salt;
+	private List<AuthVO> authList;
+	
 
 	public KjhMemberVO() {
 		
 	}
 	public KjhMemberVO(String m_num, String m_id, String m_pw, String m_name, String m_phone, String m_email,
-			String m_addr, String m_reg_date, String m_update_date,String salt) {
+			String m_addr, String m_reg_date, String m_update_date,String salt,List<AuthVO> authList) {
 		this.m_num = m_num;
 		this.m_id = m_id;
 		this.m_pw = m_pw;
@@ -87,5 +94,11 @@ public class KjhMemberVO {
 	public void setSalt(String salt) {
 		this.salt = salt;
 		
+	}
+	public List<AuthVO> getAuthList() {
+		return authList;
+	}
+	public void setAuthList(List<AuthVO> authList) {
+		this.authList = authList;
 	}
 }

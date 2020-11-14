@@ -28,7 +28,9 @@ function registerform(){
 <form action="/board/loginOK" method="post">
 <input id="m_id" name="m_id" type="text"><br>
 <input id="m_pw" name="m_pw" type="password"><br>
+<input type="hidden" name="{_csrf.parameterName}" value="$_csrf.token">
 <input type="submit" id="login_btn" name="login_btn" value="로그인"><input type="reset" value="취소"><br>
+
 </form>
 	<%
 					String clientId = "wIALdFClLRItjrr2Eb15";//애플리케이션 클라이언트 아이디값";

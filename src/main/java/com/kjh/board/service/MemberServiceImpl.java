@@ -71,12 +71,11 @@ public class MemberServiceImpl implements MemberService {
 		kvo.setM_pw(pw_sha);
 		log.info("로그인 시 pw 값 암호화된 ::: "+pw_sha);
 		
-		String m_num = memberdao.mem_select_m_num(kvo); // id와 pw로 회원번호를 조회하기
-		if (m_num != null) {
-			session.setAttribute("m_num", m_num);
+		kvo = memberdao.mem_select_m_num(kvo); // id와 pw로 회원번호를 조회하기
+		if (kvo.getM_num() != null) {
+			session.setAttribute("m_num", kvo.getM_num());
 			return true;
-		}
-		;
+		};
 		return false;
 	}
 

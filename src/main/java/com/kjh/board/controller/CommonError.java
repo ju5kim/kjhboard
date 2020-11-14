@@ -12,6 +12,7 @@ public class CommonError {
 	public String accessDenied(Authentication authentication,Model model) {
 		
 		model.addAttribute("msg","Accessdenied 입니다.");
+		
 		return "/sample/accessError";
 	}
 	@RequestMapping("/customLogin")
